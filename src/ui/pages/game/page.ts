@@ -97,8 +97,15 @@ export async function startVmPage(canvas: HTMLCanvasElement): Promise<void> {
   const calls: string[] = [];
   /** Cumulative calls per Win32 API; the backtick panel shows top hotspots for performance diagnosis. */
   const callHistogram = new Map<string, number>();
+  // The probe runs from onCall, i.e. once per hypercall (tens of thousands per second in battle). Rebuilding three
+  // JSON strings each time cost more CPU than the entire Win32 shim in a profile; readers poll these datasets, so
+  // coalescing to 100ms keeps them fresh enough while removing the per-call cost.
+  let lastRuntimeCallProbe = 0;
   const exposeRuntimeCallProbe = () => {
     if (!debugAutoOpen) return;
+    const now = performance.now();
+    if (now - lastRuntimeCallProbe < 100) return;
+    lastRuntimeCallProbe = now;
     canvas.dataset.vmBinkCalls = JSON.stringify(
       Object.fromEntries([...callHistogram].filter(([key]) => key.startsWith('BINKW32.DLL!'))),
     );

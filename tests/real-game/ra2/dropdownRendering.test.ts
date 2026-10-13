@@ -1,4 +1,5 @@
 import { describeVmSmoke, type VmSmokeOptions } from '../helpers/runVmSmoke';
+import { RECORDED_ROUTE_RESOLUTION } from '../helpers/sessionIni';
 import { expect } from 'vitest';
 import type { VmFrame } from '../../../src/vm86/win32';
 
@@ -16,6 +17,7 @@ function assertScrollbar(frame: VmFrame, x: number, top: number, bottom: number)
 }
 
 const options: VmSmokeOptions = {
+  ini: { resolution: RECORDED_ROUTE_RESOLUTION },
   gameId: 'ra2',
   memoryBytes: 768 * 1024 * 1024,
   timeoutMs: 60_000,

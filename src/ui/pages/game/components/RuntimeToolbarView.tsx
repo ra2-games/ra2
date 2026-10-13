@@ -264,7 +264,7 @@ export function RuntimeToolbarView({
           label={t('实时超分模式')}
           value={model.upscaleMode}
           options={[
-            { value: 'off', label: t('关闭') },
+            { value: 'off', label: t('已关闭') },
             { value: 'bicubic', label: t('Bicubic（非 AI）') },
             { value: 'fsr', label: t('FSR 1.0（柔和）') },
             { value: 'fsr-rcas-soft', label: t('FSR 1.0+RCAS（轻锐化）') },
@@ -286,7 +286,7 @@ export function RuntimeToolbarView({
           label={t('ReShade 后处理')}
           value={model.reshadeMode ?? 'off'}
           options={[
-            { value: 'off', label: t('关闭') },
+            { value: 'off', label: t('已关闭') },
             { value: 'enhance', label: t('色彩 + 锐化') },
             { value: 'compare', label: t('左右对照') },
           ]}

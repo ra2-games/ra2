@@ -1,3 +1,4 @@
+import type { PeImageProbe } from '../../vm86/peProbe';
 import type { GuestMemory } from '../../vm86/win32';
 import { le32 } from '../shared/bytes';
 import { YR_STARTUP_PAGE_HASH } from './startupPage';
@@ -36,13 +37,28 @@ const signature = new Uint8Array([
   0x83,
 ]);
 
-/** Install only before first execution; the caller must provide a verified EXE hash and an exclusive stub-region allocator. */
+/**
+ * Version evidence for an executable other than the reference build: the complete signature, including its absolute
+ * operand and both relative call displacements, must occur exactly once in executable sections and exactly at the probe
+ * site. Distributions that only differ elsewhere (for example the Steam 1.006TUC repack) keep this code byte-identical.
+ */
+function hasUniqueSiteSignature(image: PeImageProbe | null | undefined): boolean {
+  return image?.findCode([...signature])?.address === YR_SPAWNER_PROBE_SITE;
+}
+
+/**
+ * Install only before first execution with an exclusive stub-region allocator. The caller must supply either the
+ * reference EXE hash or the executable's PE image, whose unique site signature is verified before memory is touched.
+ */
 export function installYrSpawnerProbe(
   memory: GuestMemory,
   executableSha256: string,
   reserve: (bytes: number) => number,
+  image?: PeImageProbe | null,
 ): { address: number; countAddress: number; stackAddress: number } {
-  if (executableSha256 !== YR_SPAWNER_PROBE_EXE_SHA256) throw new Error('YR Spawner 探针：EXE 哈希不匹配');
+  if (executableSha256 !== YR_SPAWNER_PROBE_EXE_SHA256 && !hasUniqueSiteSignature(image)) {
+    throw new Error('YR Spawner 探针：EXE 哈希不匹配，且映像中没有唯一的入口签名');
+  }
   const current = memory.read_memory(YR_SPAWNER_PROBE_SITE, signature.length);
   if (current.length !== signature.length || !current.every((byte, index) => byte === signature[index])) {
     throw new Error('YR Spawner 探针：入口字节签名不匹配（或已安装）');

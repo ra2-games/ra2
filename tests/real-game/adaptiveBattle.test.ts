@@ -12,6 +12,7 @@ import type { VmStatus } from '../../src/app/session/runtimeEvents';
 import { InstallationFiles, silentAudio } from './helpers/installationFiles';
 import { executableCorpus } from './helpers/executableCorpus';
 import { REPO_ROOT, resolveGameDir } from './helpers/gameDir';
+import { patchSessionIni, sessionIniName } from './helpers/sessionIni';
 
 const cdMode = process.env.VM_CORPUS_CD;
 if (process.env.VM_CORPUS_CD && !['absent', 'mounted'].includes(process.env.VM_CORPUS_CD))
@@ -27,6 +28,10 @@ it.each(executableCorpus())(
       : original;
     const files = new InstallationFiles(resolveGameDir(entry.gameId), true);
     await files.write(game.executable, entry.bytes.slice());
+    // Direct battle startup is the subject; the four-minute first-run intro ([Intro] Play=yes) would only consume the
+    // 60-second frame deadline. The overlay stays in this provider's memory.
+    const ini = sessionIniName(entry.gameId);
+    await files.write(ini, patchSessionIni((await files.read(ini)) ?? new Uint8Array(), { playIntro: false }));
     let status: VmStatus | undefined;
     let frames = 0;
     const core = new VmCore(

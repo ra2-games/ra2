@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { basename, join, relative, resolve } from 'node:path';
 import { REPO_ROOT } from './gameDir';
@@ -6,6 +6,12 @@ import { REPO_ROOT } from './gameDir';
 /** Explicit local corpus; recursive discovery includes new distributions without a runtime version registry. */
 export function executableCorpus() {
   const directory = resolve(REPO_ROOT, process.env.VM_EXE_CORPUS_DIR ?? 'ra2-exe');
+  if (!existsSync(directory)) {
+    throw new Error(
+      `Executable corpus directory ${directory} does not exist; set VM_EXE_CORPUS_DIR to a directory containing ` +
+        'game.exe/gamemd.exe (for a single installation, the game directory itself, e.g. VM_EXE_CORPUS_DIR=game/ra2)',
+    );
+  }
   const files: string[] = [];
   const visit = (root: string) => {
     for (const entry of readdirSync(root, { withFileTypes: true })) {

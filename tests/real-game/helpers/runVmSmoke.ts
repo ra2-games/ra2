@@ -39,6 +39,7 @@ import {
   type VmFrame,
 } from '../../../src/vm86/win32';
 import { normalizeGuestPath } from '../../../src/vm86/paths';
+import { patchSessionIni, sessionIniName, type SessionIniOptions } from './sessionIni';
 import { Win32Shim } from '../../../src/games/win32Shim';
 import { guestFileSearch } from '../../../src/vm86/shim/fileSearch';
 import { RGB565_TO_RGBA32 } from '../../../src/vm86/pixels';
@@ -92,6 +93,8 @@ export interface VmSmokeOptions {
   assertFinalFrame?: (frame: VmFrame) => void;
   /** Check control state after interaction so a merely visual scrollbar cannot pass without selecting hidden items. */
   assertFinalState?: (shim: Win32Shim, memory: V86) => void;
+  /** Session-only RA2.INI/RA2MD.INI settings the route depends on, such as the resolution its click coordinates use. */
+  ini?: SessionIniOptions;
   /** Explicit experimental entry: install guest probes before first execution; the allocator exclusively reserves the startup-stub region. */
   prepareGuest?: (memory: V86, executable: Uint8Array, reserve: (bytes: number) => number) => void;
 }
@@ -1295,7 +1298,16 @@ export async function runVmSmoke(options: VmSmokeOptions): Promise<void> {
           })?.[1];
           const hostPath = resolveGuestFile(GAME_DIR, guestPath);
           const immutableArchive = /\.(?:mix|bag)$/i.test(normalizedGuestPath);
-          if (hostPath && !(immutableArchive && shim.hasMountedFile(guestPath))) {
+          const sessionIni =
+            options.ini && normalizedGuestPath.split(/[\\/]/).at(-1) === sessionIniName(GAME_ID).toLowerCase();
+          if (sessionIni) {
+            // Same remount-per-open semantics as other loose files, with the overlay applied to the installed bytes.
+            shim.mountFile(
+              guestPath,
+              patchSessionIni(hostPath ? bytesOf(hostPath) : new Uint8Array(), options.ini!),
+              true,
+            );
+          } else if (hostPath && !(immutableArchive && shim.hasMountedFile(guestPath))) {
             if (sparsePrefix) {
               const sparse = bytesPrefix(hostPath, sparsePrefix);
               shim.mountFile(guestPath, sparse.bytes, true, sparse.totalSize);

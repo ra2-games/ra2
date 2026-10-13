@@ -4,6 +4,7 @@ import {
   YR_SPAWNER_PROBE_EXE_SHA256 as hash,
   YR_SPAWNER_PROBE_SITE as site,
 } from '../../src/games/yr/spawnerProbe';
+import { PeImageProbe } from '../../src/vm86/peProbe';
 import { createGuestMemory } from '../helpers/guestMemory';
 import { withGuestMachine, PROGRAM, le32, finish } from '../helpers/guestMachine';
 
@@ -20,6 +21,27 @@ describe('YR Spawner 客体探针', () => {
     expect(() => installYrSpawnerProbe(memory, 'ra2', reserve)).toThrow('哈希');
     expect(() => installYrSpawnerProbe(memory, hash, reserve)).toThrow('签名');
     expect(reserve).not.toHaveBeenCalled();
+  });
+  it('非参考哈希只接受映像中唯一且位于探针点的完整签名', () => {
+    const code = (placements: readonly number[]) => {
+      const base = site - 0x100;
+      const bytes = new Uint8Array(0x400);
+      for (const address of placements) bytes.set(original, address - base);
+      return new PeImageProbe([{ address: base, mappedSize: bytes.length, bytes, characteristics: 0x60000020 }]);
+    };
+    const reserve = vi.fn(() => scratch);
+    for (const image of [null, code([]), code([site + 0x40]), code([site, site + 0x40])]) {
+      const memory = createGuestMemory();
+      memory.write_memory(original, site);
+      expect(() => installYrSpawnerProbe(memory, 'other', reserve, image)).toThrow('哈希');
+    }
+    expect(reserve).not.toHaveBeenCalled();
+    const memory = createGuestMemory();
+    memory.write_memory(original, site);
+    installYrSpawnerProbe(memory, 'other', () => scratch, code([site]));
+    expect(memory.read_memory(site + 6, 18)).toEqual(new Uint8Array(original.slice(6)));
+    // Image evidence never replaces the live-byte check.
+    expect(() => installYrSpawnerProbe(createGuestMemory(), 'other', reserve, code([site]))).toThrow('签名');
   });
   it('只替换完整六字节，拒绝重装、重叠或非桩区分配', () => {
     const memory = createGuestMemory();

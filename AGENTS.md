@@ -33,7 +33,7 @@ These rules apply throughout the repository. The project runs original RA2/YR pr
 
 ## Documentation maintenance
 
-- CLAUDE.md is a symlink to AGENTS.md; maintain only this file.
+- CLAUDE.md only imports AGENTS.md (`@AGENTS.md`); maintain only this file.
 - Update corresponding docs when changing interfaces, directories, or commands. Repository configuration is the sole source for versions/scripts.
 - Current guides must not accumulate per-commit logs, machine-specific temporary paths, or obsolete todos. Retain historical experiments only when useful for maintenance, explicitly identifying their baseline and currency. Fix maintained links after file moves and preserve reverse-engineering evidence.
 - Maintained docs and agent instructions avoid external domains/links. Attribute sources by project, version/tag, and source path; connection examples use environment variables or loopback addresses. The user-requested README site link and remotely hosted badges are explicit exceptions. Do not change runtime configuration or original third-party license text to enforce this rule.

@@ -175,6 +175,7 @@ class WebGlIndexedFrameRenderer implements FrameBackend {
   private cursorHeight = 0;
   private destroyed = false;
   private readonly upscaleLocations = new Map<WebGLProgram, WebGLUniformLocation | null>();
+  private readonly outputSizeLocations = new Map<WebGLProgram, WebGLUniformLocation | null>();
   /** RCAS intermediate pass: EASU renders into an RGBA texture, then RCAS outputs to the canvas. */
   private readonly rcas: {
     program: WebGLProgram;
@@ -368,6 +369,7 @@ class WebGlIndexedFrameRenderer implements FrameBackend {
     if (spatialUpscale || fsr) {
       for (const program of [this.program, this.rgbaProgram, this.rgb565Program]) {
         this.upscaleLocations.set(program, gl.getUniformLocation(program, 'upscale'));
+        this.outputSizeLocations.set(program, gl.getUniformLocation(program, 'outputSize'));
       }
     }
     if (fsr && fsr !== 'fsr') {
@@ -466,7 +468,7 @@ class WebGlIndexedFrameRenderer implements FrameBackend {
       const type = packed ? gl.UNSIGNED_SHORT : gl.UNSIGNED_BYTE;
       const program = packed ? this.rgb565Program : this.rgbaProgram;
       gl.useProgram(program);
-      this.setUpscale(program, upscaling);
+      this.setUpscale(program, upscaling, targetWidth, targetHeight);
       gl.activeTexture(gl.TEXTURE2);
       gl.bindTexture(gl.TEXTURE_2D, this.rgbaTexture);
       if (this.uploadedFrame !== frame) {
@@ -497,7 +499,7 @@ class WebGlIndexedFrameRenderer implements FrameBackend {
       }
     } else {
       gl.useProgram(this.program);
-      this.setUpscale(this.program, upscaling);
+      this.setUpscale(this.program, upscaling, targetWidth, targetHeight);
       gl.activeTexture(gl.TEXTURE0);
       gl.bindTexture(gl.TEXTURE_2D, this.indexTexture);
       if (this.uploadedFrame !== frame) {
@@ -614,10 +616,12 @@ class WebGlIndexedFrameRenderer implements FrameBackend {
     gl.disable(gl.BLEND);
   }
 
-  private setUpscale(program: WebGLProgram, upscaling: boolean): void {
+  private setUpscale(program: WebGLProgram, upscaling: boolean, width: number, height: number): void {
     // When disabled, add no GPU-state calls; retain the independent cursor pass so reconstruction filters cannot blur mouse rendering.
     if (!this.spatialUpscale && !this.fsr) return;
     this.gl.uniform1i(this.upscaleLocations.get(program) ?? null, upscaling ? 1 : 0);
+    // Only the spatial shader declares outputSize; other programs get a null location, which WebGL ignores.
+    if (upscaling) this.gl.uniform2f(this.outputSizeLocations.get(program) ?? null, width, height);
   }
 }
 

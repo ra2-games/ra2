@@ -6,6 +6,7 @@ import {
   gameResolutionIni,
   parseGameResolution,
   patchGameResolutionIni,
+  patchIniSection,
   withGameResolutionOverride,
 } from '../../src/games/resolution';
 
@@ -85,5 +86,19 @@ describe('RA2/YR 分辨率 INI 内存覆盖', () => {
     expect(patched).toBe('[Video]\nAllowHiResModes=yes\nScreenWidth=1024\nScreenHeight=768\n');
     expect(patched.startsWith('[')).toBe(true);
     expect(patched.endsWith('\n')).toBe(true);
+  });
+  it('通用 section 修改：大小写不敏感匹配键，保留编码、换行与其他行，缺失时追加', () => {
+    const source = '[Intro]\r\nplay=yes\r\n; note\r\n[Video]\r\nScreenWidth=640\r\n';
+    expect(decode(patchIniSection(encode(source), 'intro', [['Play', 'no']]))).toBe(
+      '[Intro]\r\nPlay=no\r\n; note\r\n[Video]\r\nScreenWidth=640\r\n',
+    );
+    expect(decode(patchIniSection(encode('[Video]\nScreenWidth=640'), 'Intro', [['Play', 'no']]))).toBe(
+      '[Video]\nScreenWidth=640\n\n[Intro]\nPlay=no',
+    );
+    expect(decode(patchIniSection(new Uint8Array(), 'Intro', [['Play', 'no']]))).toBe('[Intro]\nPlay=no\n');
+    const latin1 = encode('[Options]\nName=\xe9\xff\n');
+    expect(patchIniSection(latin1, 'Options', [['GameSpeed', '3']]).slice(0, latin1.length - 1)).toEqual(
+      latin1.slice(0, latin1.length - 1),
+    );
   });
 });

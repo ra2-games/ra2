@@ -3,8 +3,10 @@ import { supportedGame } from '../../../src/games/catalog';
 import { expect } from 'vitest';
 import { createHash } from 'node:crypto';
 import { describeVmSmoke, type VmSmokeOptions } from '../helpers/runVmSmoke';
+import { RECORDED_ROUTE_RESOLUTION } from '../helpers/sessionIni';
 
 const options: VmSmokeOptions = {
+  ini: { resolution: RECORDED_ROUTE_RESOLUTION, playIntro: false },
   executablePath: gameResourceExe('yr'),
   gameId: 'yr',
   memoryBytes: 768 * 1024 * 1024,

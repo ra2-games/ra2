@@ -179,6 +179,7 @@ export class VmCore {
   async start(): Promise<void> {
     if (this.emulator) throw new Error('VM 已创建');
     this.hasPresentedFrame = false;
+    this.runningDetail = '';
     try {
       this.source = await this.platform.resourcePolicy.prepareSource(this.source);
       const { game, files: gameFiles, executableBytes: exe } = this.source;
@@ -288,7 +289,13 @@ export class VmCore {
             game.fastFileMirrorTop === undefined ? undefined : Math.min(game.fastFileMirrorTop, guestMemoryBytes),
           fastFileMirrorFiles: game.fastFileMirrorFiles,
           onFrame: (frame) => {
+            const first = !this.hasPresentedFrame;
             this.hasPresentedFrame = true;
+            // Startup file reads temporarily replace the running detail; once the game is visible, the last
+            // "reading" message would otherwise remain as the status for the whole session.
+            if (first && this.currentPhase === 'running' && this.runningDetail) {
+              this.status('running', this.runningDetail);
+            }
             this.callbacks.onFrame?.(frame);
           },
           onLogicFrame: () => this.callbacks.onLogicFrame?.(1),
@@ -326,7 +333,8 @@ export class VmCore {
         this.diagnosticsTimer = globalThis.setInterval(() => void this.logDiagnostics(), DIAGNOSTICS_INTERVAL_MS);
       }
       await emulator.run();
-      this.status('running', `${game.executable} 正在 v86 中执行（入口 0x${image.entry.toString(16)}）`);
+      this.runningDetail = `${game.executable} 正在 v86 中执行（入口 0x${image.entry.toString(16)}）`;
+      this.status('running', this.runningDetail);
     } catch (error) {
       this.status('error', error instanceof Error ? error.message : String(error));
       await this.destroy();
@@ -853,6 +861,7 @@ export class VmCore {
 
   private currentPhase: VmStatus['phase'] = 'loading';
   private hasPresentedFrame = false;
+  private runningDetail = '';
 
   private status(phase: VmStatus['phase'], detail: string): void {
     this.currentPhase = phase;

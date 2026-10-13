@@ -519,7 +519,7 @@ describe('VmCore lifecycle orchestration', () => {
     }
   });
 
-  it('首帧前上报资源名并保持运行阶段，首帧后停止启动进度', async () => {
+  it('首帧前上报资源名并保持运行阶段，首帧后恢复运行描述并停止启动进度', async () => {
     const emulator = new FakeEmulator();
     const audio = new FakeAudio();
     const statuses: Array<{ phase: string; detail: string }> = [];
@@ -549,6 +549,10 @@ describe('VmCore lifecycle orchestration', () => {
       emulator.write_memory(new TextEncoder().encode('ra2.mix\0'), 0x1000);
       await sync(0x1000);
       expect(statuses.at(-1)).toEqual({ phase: 'running', detail: '正在读取 ra2.mix…' });
+      onFrame!();
+      // The first visible frame replaces the stale per-file startup detail with the running description once.
+      expect(statuses.at(-1)?.phase).toBe('running');
+      expect(statuses.at(-1)?.detail).toMatch(/正在 v86 中执行/);
       onFrame!();
       const count = statuses.length;
       emulator.write_memory(new TextEncoder().encode('language.mix\0'), 0x1000);

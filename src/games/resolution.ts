@@ -57,43 +57,58 @@ export function patchGameResolutionIni(bytes: Uint8Array, resolution: GameResolu
         `ScreenWidth=${resolution.width}${newline}ScreenHeight=${resolution.height}${newline}`,
     );
   }
+  return patchIniSection(bytes, 'Video', [
+    ['AllowHiResModes', 'yes'],
+    ['ScreenWidth', String(resolution.width)],
+    ['ScreenHeight', String(resolution.height)],
+  ]);
+}
+
+/**
+ * Set keys in one INI section while preserving encoding, newline style, unrelated lines and key order. Keys match
+ * case-insensitively and are rewritten in the given canonical spelling; a missing section is appended.
+ */
+export function patchIniSection(
+  bytes: Uint8Array,
+  section: string,
+  entries: readonly (readonly [key: string, value: string])[],
+): Uint8Array {
+  const text = bytesToLatin1(bytes);
+  const newline = text.includes('\r\n') ? '\r\n' : '\n';
   const trailingNewline = /(?:\r\n|\n|\r)$/.test(text);
-  const lines = text.split(/\r\n|\n|\r/);
+  const lines = text ? text.split(/\r\n|\n|\r/) : [];
   if (trailingNewline) lines.pop();
 
-  let videoStart = lines.findIndex((line) => /^\s*\[video\]\s*$/i.test(line));
-  if (videoStart < 0) {
+  const name = section.toLowerCase();
+  let sectionStart = lines.findIndex(
+    (line) =>
+      line
+        .match(/^\s*\[([^\]]+)\]\s*$/)?.[1]
+        ?.trim()
+        .toLowerCase() === name,
+  );
+  if (sectionStart < 0) {
     if (lines.length && lines.at(-1)?.trim()) lines.push('');
-    videoStart = lines.length;
-    lines.push('[Video]');
+    sectionStart = lines.length;
+    lines.push(`[${section}]`);
   }
-  let videoEnd = lines.findIndex((line, index) => index > videoStart && /^\s*\[[^\]]+\]\s*$/.test(line));
-  if (videoEnd < 0) videoEnd = lines.length;
+  let sectionEnd = lines.findIndex((line, index) => index > sectionStart && /^\s*\[[^\]]+\]\s*$/.test(line));
+  if (sectionEnd < 0) sectionEnd = lines.length;
 
-  const values: Readonly<Record<string, string>> = {
-    allowhiresmodes: 'yes',
-    screenwidth: String(resolution.width),
-    screenheight: String(resolution.height),
-  };
-  for (const [normalizedKey, value] of Object.entries(values)) {
+  for (const [key, value] of entries) {
+    const normalizedKey = key.toLowerCase();
     const lineIndex = lines.findIndex((line, index) => {
-      if (index <= videoStart || index >= videoEnd) return false;
+      if (index <= sectionStart || index >= sectionEnd) return false;
       const match = line.match(/^\s*([^=;#]+?)\s*=/);
       return match?.[1]?.trim().toLowerCase() === normalizedKey;
     });
-    const canonicalKey =
-      normalizedKey === 'allowhiresmodes'
-        ? 'AllowHiResModes'
-        : normalizedKey === 'screenwidth'
-          ? 'ScreenWidth'
-          : 'ScreenHeight';
-    if (lineIndex >= 0) lines[lineIndex] = `${canonicalKey}=${value}`;
+    if (lineIndex >= 0) lines[lineIndex] = `${key}=${value}`;
     else {
-      lines.splice(videoEnd, 0, `${canonicalKey}=${value}`);
-      videoEnd++;
+      lines.splice(sectionEnd, 0, `${key}=${value}`);
+      sectionEnd++;
     }
   }
-  return latin1ToBytes(lines.join(newline) + (trailingNewline ? newline : ''));
+  return latin1ToBytes(lines.join(newline) + (trailingNewline || !text ? newline : ''));
 }
 
 /** Default menu resolution when an online package has no INI: the standard RA2 menu setting. */

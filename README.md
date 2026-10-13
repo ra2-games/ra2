@@ -11,7 +11,7 @@
 Run the original x86 executables of **Red Alert 2** and **Yuri's Revenge** directly in your browser.
 RA2 VM uses v86, custom firmware, and a Win32/DirectX compatibility layer without starting Windows.
 
-*⚠️EA has not endorsed and does not support this product.*
+_⚠️EA has not endorsed and does not support this product._
 
 **Play online: [ra2.games](https://ra2.games)**
 

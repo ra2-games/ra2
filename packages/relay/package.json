@@ -1,0 +1,72 @@
+{
+  "name": "relay-package",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "通用 WebSocket relay 服务端、浏览器客户端与 Worker 桥接",
+  "packageManager": "pnpm@11.24.0",
+  "engines": {
+    "pnpm": "11.24.0"
+  },
+  "exports": {
+    ".": {
+      "types": "./src/client/index.ts",
+      "import": "./dist/lib/client.js"
+    },
+    "./client": {
+      "types": "./src/client/index.ts",
+      "import": "./dist/lib/client.js"
+    },
+    "./server": {
+      "types": "./src/server/gameRelay.ts",
+      "import": "./dist/lib/server.js"
+    },
+    "./faults": {
+      "types": "./src/server/relayFaults.ts",
+      "import": "./dist/lib/faults.js"
+    },
+    "./wire": {
+      "types": "./src/network/relayWire.ts",
+      "import": "./dist/lib/wire.js"
+    },
+    "./cli": "./src/cli.mts"
+  },
+  "scripts": {
+    "dev": "tsx watch src/cli.mts",
+    "build": "pnpm run build:lib && pnpm run build:server",
+    "start": "node dist/gameRelay.cjs",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "check": "pnpm run typecheck && pnpm test && pnpm run build",
+    "build:lib": "tsx scripts/build.mts",
+    "build:server": "sh scripts/build-server.sh"
+  },
+  "dependencies": {
+    "ws": "^8.21.3"
+  },
+  "devDependencies": {
+    "@types/node": "^26.2.0",
+    "@types/ws": "^8.18.1",
+    "tsx": "^4.23.12",
+    "typescript": "^5.6.0",
+    "vitest": "^4.1.11",
+    "esbuild": "0.25.12"
+  },
+  "files": [
+    "src",
+    "scripts",
+    "tests",
+    "README.md",
+    "RELAY_PROTOCOL.md",
+    "tsconfig.json",
+    "vitest.config.ts",
+    "dist/lib",
+    "pnpm-lock.yaml",
+    "Dockerfile",
+    "Dockerfile.dockerignore",
+    "compose.yaml",
+    "pnpm-workspace.yaml",
+    "LICENSE"
+  ],
+  "license": "GPL-3.0-or-later"
+}

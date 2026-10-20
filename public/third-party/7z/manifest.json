@@ -1,0 +1,11 @@
+{
+  "package": "7z-wasm",
+  "version": "1.2.0",
+  "wrapperRevision": "521d2cf93f5964f4e77b01049e19f1b29305c454",
+  "sevenZipVersion": "24.09",
+  "emscriptenVersion": "4.0.10",
+  "files": {
+    "7zip-24.09-src.tar.xz": "49c05169f49572c1128453579af1632a952409ced028259381dac30726b6133a",
+    "7z-wasm-1.2.0-source.tar.gz": "72661332d7ecae39c57dd9af509da4f1ff0e485fa2ae68dc04ad24f0962c24c1"
+  }
+}

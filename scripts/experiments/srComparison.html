@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="zh-CN">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>RA2 超分画质对比</title>
+  <style>
+  body {
+    margin: 0;
+    background: #101419;
+    color: #dbe2eb;
+    font: 16px system-ui;
+    line-height: 1.6;
+  }
+  main {
+    max-width: 1500px;
+    margin: auto;
+    padding: 24px;
+  }
+  h1 {
+    margin: 0;
+  }
+  a {
+    color: #8bc7ff;
+  }
+  header {
+    border-bottom: 1px solid #39424f;
+    padding-bottom: 20px;
+  }
+  button,
+  select {
+    font: inherit;
+    background: #252e39;
+    color: white;
+    border: 1px solid #627386;
+    padding: 8px;
+    border-radius: 6px;
+  }
+  label {
+    display: inline-block;
+    margin: 8px 18px 8px 0;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 18px;
+  }
+  figure {
+    margin: 0;
+    background: #19212c;
+    padding: 12px;
+    overflow: auto;
+  }
+  figcaption {
+    margin-bottom: 10px;
+  }
+  figure img {
+    display: block;
+    width: auto;
+    max-width: none;
+    image-rendering: pixelated;
+  }
+  small {
+    display: block;
+    color: #acbacc;
+  }
+  .overview {
+    max-width: 100%;
+    image-rendering: pixelated;
+  }
+  .pair {
+    display: flex;
+    gap: 16px;
+    overflow: auto;
+    padding-bottom: 18px;
+  }
+  .pair figure {
+    flex-shrink: 0;
+  }
+  section {
+    margin-top: 32px;
+  }
+  pre {
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+  input {
+    accent-color: #69b7ff;
+  }
+  </style>
+  <main>
+    <header>
+      <h1>RA2 战场 · SR 画质对比</h1>
+      <p>同一张真实游戏截图，六个原生 1× / 2× 模型；UltraSharp 4× 单列作参考。没有重新绘制游戏素材。</p>
+      <p>
+        统一以 2× 尺寸比较：1× 结果采用最近邻放大展示；4× 参考缩至 2×。每张图都可点击打开原倍率 PNG。CPU 离线 FP32
+        推理，耗时不代表 WebGPU 性能，单帧不代表运动稳定性。
+      </p>
+    </header>
+    <section>
+      <h2>原始战场与取样位置</h2>
+      <a href="source.png" target="_blank"><img class="overview" src="overview.png" alt="战场裁剪位置"></a>
+    </section>
+    <section>
+      <h2>同区域对照</h2>
+      <label
+        >素材
+        <select id="region"></select></label
+      ><label
+        >显示放大
+        <select id="zoom">
+          <option value="1">100%（统一 2×）</option>
+          <option value="2">200%（像素放大）</option>
+        </select></label
+      ><br>
+      <label>A <select id="left"></select></label><label>B <select id="right"></select></label>
+      <div class="pair" id="pair"></div>
+      <p>
+        <a id="sheet" target="_blank">打开九宫格 PNG</a>
+        ·
+        <a href="report.json" target="_blank">来源、哈希、原生尺寸与运行记录</a>
+      </p>
+      <div class="grid" id="gallery"></div>
+    </section>
+    <section>
+      <h2>模型来源与限制</h2>
+      <div id="sources"></div>
+      <p>权重许可证各自独立，未通过此服务器分发。游戏截图仅用于此项目的画质比较。</p>
+    </section>
+  </main>
+  <script type="module">
+  const report = await (await fetch('report.json')).json();
+  const $ = (id) => document.getElementById(id);
+  const options = [
+    { id: 'nearest', name: '原图 · 最近邻 2×', scale: 2 },
+    { id: 'bicubic', name: 'Bicubic 2×（非 AI）', scale: 2 },
+    ...report.models,
+  ];
+  for (const [i, r] of report.regions.entries()) $('region').add(new Option(`${i + 1}. ${r.name}`, i));
+  for (const id of ['left', 'right']) for (const m of options) $(id).add(new Option(m.name, m.id));
+  $('left').value = 'ultrasharp';
+  $('right').value = 'anime-soft';
+  function panel(m, index) {
+    const figure = document.createElement('figure'),
+      caption = document.createElement('figcaption'),
+      link = document.createElement('a'),
+      img = document.createElement('img'),
+      note = document.createElement('small');
+    caption.textContent = m.name;
+    note.textContent =
+      m.id === 'nearest' || m.id === 'bicubic'
+        ? '非 AI 对照'
+        : m.scale === 1
+          ? '原生 1× 修复；此处最近邻放至 2×'
+          : m.scale === 4
+            ? '原生 4× 参考；此处缩至 2×'
+            : '原生 2× 输出';
+    const file = `${index}-${m.id}.png`;
+    link.href = file;
+    link.target = '_blank';
+    img.src = m.hash ? 'view-' + file : file;
+    img.alt = m.name;
+    img.style.width = report.regions[index].size * 2 * Number($('zoom').value) + 'px';
+    link.append(img);
+    figure.append(caption, note, link);
+    return figure;
+  }
+  function render() {
+    const i = Number($('region').value);
+    $('pair').replaceChildren(
+      ...['left', 'right'].map((id) =>
+        panel(
+          options.find((m) => m.id === $(id).value),
+          i,
+        ),
+      ),
+    );
+    $('gallery').replaceChildren(...options.map((m) => panel(m, i)));
+    $('sheet').href = `sheet-${i}.png`;
+  }
+  for (const id of ['region', 'zoom', 'left', 'right']) $(id).onchange = render;
+  for (const m of report.models) {
+    const p = document.createElement('p'),
+      a = document.createElement('a');
+    a.href = m.url;
+    a.textContent = m.name;
+    a.target = '_blank';
+    p.append(a, ` — ${m.license} · ${m.backend}`);
+    $('sources').append(p);
+  }
+  render();
+  </script>
+</html>

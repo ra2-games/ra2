@@ -1,0 +1,78 @@
+.mo-menu h1 {
+  color: #ffe39a;
+  margin: 12px 0;
+  font-size: 30px;
+}
+.mo-menu header p {
+  color: #c2bba9;
+}
+.mo-menu label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin: 14px 0;
+  color: #ffe39a;
+}
+.mo-menu select {
+  width: 100%;
+  padding: 9px;
+  color: #eee;
+  background: #151619;
+  border: 1px solid #796342;
+  font: inherit;
+}
+.mo-settings {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 16px;
+}
+.mo-menu-choices {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 20px 0;
+}
+.mo-menu-choices button {
+  flex: 1;
+  min-width: 120px;
+}
+.mo-mission-description {
+  white-space: pre-line;
+  line-height: 1.65;
+  max-height: 170px;
+  overflow-y: auto;
+  color: #d5cfbf;
+}
+.mo-menu [role="alert"] {
+  color: #ff8b79;
+}
+@media (max-width: 600px) {
+  .mo-settings {
+    grid-template-columns: 1fr;
+  }
+}
+.game-home #ui > .mo-menu {
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  width: min(760px, calc(100% - 32px));
+  height: fit-content;
+  max-height: calc(100dvh - 32px);
+  margin: auto;
+  padding: clamp(18px, 4vw, 32px);
+  overflow: auto;
+  pointer-events: auto;
+  background: #202020;
+  border: 2px solid #aaa;
+  box-shadow: 0 12px 40px #0009;
+  color: #ffe39a;
+}
+.mo-menu select {
+  box-sizing: border-box;
+  min-width: 0;
+}
+.mo-menu .source-picker-brand {
+  color: #ffdf54;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+}

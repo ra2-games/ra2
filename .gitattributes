@@ -1,0 +1,16 @@
+# Keep Biome-formatted files consistent across Windows and CI checkouts.
+*.ts text eol=lf
+*.mts text eol=lf
+*.tsx text eol=lf
+*.js text eol=lf
+*.json text eol=lf
+*.css text eol=lf
+*.html text eol=lf
+
+# Preserve the existing handling of third-party originals and public resources.
+**/vendor/** !text !eol
+.agents/skills/** !text !eol
+public/** !text !eol
+
+# Upstream license texts must retain their original bytes and line endings.
+public/licenses/** whitespace=-blank-at-eol,-blank-at-eof,cr-at-eol

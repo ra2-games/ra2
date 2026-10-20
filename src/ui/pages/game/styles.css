@@ -1,0 +1,2183 @@
+.agent-commands {
+  position: fixed;
+  left: 170px;
+  top: 12px;
+  z-index: 40;
+  width: min(360px, calc(100vw - 194px));
+  max-height: 220px;
+  overflow: auto;
+  padding: 8px;
+  color: #ffd75c;
+  background: #161b1ee8;
+  border: 1px solid #74704b;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.agent-commands summary {
+  cursor: pointer;
+}
+.agent-commands p {
+  color: #c5c9be;
+}
+.agent-commands ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.agent-commands li {
+  border-top: 1px solid #555;
+  padding: 6px 0;
+}
+.agent-commands li span,
+.agent-commands small {
+  display: block;
+}
+.agent-commands time {
+  color: #aaa;
+}
+@media (max-width: 600px) {
+  .agent-commands {
+    left: 12px;
+    top: auto;
+    bottom: 44px;
+    width: calc(100vw - 48px);
+    max-height: 160px;
+  }
+}
+
+.agent-connection {
+  position: fixed;
+  right: 12px;
+  top: 52px;
+  z-index: 40;
+  max-width: calc(100vw - 24px);
+  padding: 8px;
+  color: #ffd75c;
+  background: #161b1ef0;
+  border: 1px solid #74704b;
+}
+.agent-connection form {
+  display: grid;
+  gap: 8px;
+  padding-top: 8px;
+}
+.agent-connection input {
+  width: 140px;
+}
+
+:root {
+  --runtime-toolbar-width: 144px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  /* Red Alert industrial HUD: oxidized steel, warning red, and amber status lights. Retain existing variable names for component reuse. */
+  --alert: #d83a30;
+  --alert-bright: #ff5a47;
+  --warning: #e7a52b;
+  --steel: #879099;
+  --steel-dark: #262b2d;
+  --gold: var(--alert);
+  --gold-bright: var(--alert-bright);
+  --gold-soft: #9f3029;
+  --gold-dim: #642620;
+  --ink: #e1e3df;
+  --ink-dim: #a2aaa9;
+  --ink-faint: #697171;
+  --panel-bg:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 10px),
+    linear-gradient(180deg, rgba(31, 35, 36, 0.98), rgba(12, 15, 16, 0.98));
+  --panel-border: rgba(216, 58, 48, 0.58);
+  --inset-hi: inset 0 1px 0 rgba(255, 255, 255, 0.09);
+}
+html {
+  overscroll-behavior: none;
+  -webkit-text-size-adjust: 100%;
+}
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  background: #090b0c;
+}
+body {
+  overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: manipulation;
+  background:
+    radial-gradient(circle at 50% 35%, rgba(135, 33, 28, 0.16), transparent 42%),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.012) 0 1px, transparent 1px 5px), #090b0c;
+}
+#root {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  container-type: size;
+  container-name: game-viewport;
+}
+.landscape-notice > p.landscape-ea-notice {
+  position: absolute;
+  top: max(12px, env(safe-area-inset-top));
+  left: 12px;
+  right: 12px;
+}
+
+/* Layout: stage and debug sidebar sit side by side; the panel occupies layout space without covering the game. */
+#app-layout {
+  position: fixed;
+  inset: var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left);
+  display: flex;
+  align-items: stretch;
+  overflow: hidden;
+}
+#stage {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: radial-gradient(circle, #171b1d 0, #090b0c 68%);
+}
+canvas {
+  display: block;
+  aspect-ratio: auto;
+  outline: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+/* Pointer Lock hides the browser cursor. An amber outer border and four corner brackets provide a persistent, gently pulsing lock indicator without obscuring the frame. A top pill briefly says to press Esc to unlock, then fades after a few seconds. */
+#screen-frame {
+  position: relative;
+}
+/* Inside the fullscreen container and ignoring mouse input, status hints do not affect game clicks or pointer locking. */
+#vm-upscale-status {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 30;
+  max-width: calc(100% - 32px);
+  padding: 5px 10px;
+  border: 1px solid #8b9778;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.82);
+  color: #e0efbf;
+  font: 12px / 1.5 sans-serif;
+  text-align: center;
+  pointer-events: none;
+}
+#vm-upscale-status[hidden] {
+  display: none;
+}
+/* Include the Esc permission hint in the fullscreen container so browser fullscreen does not hide a sibling hint behind the canvas. */
+#screen-frame:fullscreen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+}
+#screen-frame:fullscreen #screen {
+  flex: none;
+}
+
+#screen-frame.pointer-locked {
+  outline: 2px solid rgba(255, 190, 80, 0.55);
+  outline-offset: 3px;
+}
+.lock-corner {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+.lock-corner-tl {
+  top: 4px;
+  left: 4px;
+  border-top: 2px solid rgba(255, 190, 80, 0.9);
+  border-left: 2px solid rgba(255, 190, 80, 0.9);
+  border-top-left-radius: 4px;
+}
+.lock-corner-tr {
+  top: 4px;
+  right: 4px;
+  border-top: 2px solid rgba(255, 190, 80, 0.9);
+  border-right: 2px solid rgba(255, 190, 80, 0.9);
+  border-top-right-radius: 4px;
+}
+.lock-corner-bl {
+  bottom: 4px;
+  left: 4px;
+  border-bottom: 2px solid rgba(255, 190, 80, 0.9);
+  border-left: 2px solid rgba(255, 190, 80, 0.9);
+  border-bottom-left-radius: 4px;
+}
+.lock-corner-br {
+  bottom: 4px;
+  right: 4px;
+  border-bottom: 2px solid rgba(255, 190, 80, 0.9);
+  border-right: 2px solid rgba(255, 190, 80, 0.9);
+  border-bottom-right-radius: 4px;
+}
+#screen-frame.pointer-locked .lock-corner {
+  opacity: 0.8;
+  animation: lock-corner-pulse 2.2s ease-in-out infinite;
+}
+@keyframes lock-corner-pulse {
+  0%,
+  100% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+.pointer-lock-hint {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 40;
+  padding: 7px 16px;
+  border-radius: 999px;
+  background: rgba(18, 14, 8, 0.85);
+  color: #ffd08a;
+  border: 1px solid rgba(255, 190, 80, 0.5);
+  font:
+    13px / 1.4 system-ui,
+    -apple-system,
+    sans-serif;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+}
+.pointer-lock-hint.show {
+  animation: pointer-lock-hint 3.6s ease forwards;
+}
+@keyframes pointer-lock-hint {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-8px);
+  }
+  10% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  75% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+#vm-debug {
+  position: relative;
+  z-index: 20;
+  flex: 0 0 auto;
+  box-sizing: border-box;
+  width: min(430px, 34cqw);
+  min-width: 320px;
+  overflow: hidden;
+  padding: 10px;
+  background: var(--panel-bg);
+  border-left: 2px solid var(--alert);
+  box-shadow:
+    -8px 0 32px rgba(0, 0, 0, 0.62),
+    inset 3px 0 0 rgba(231, 165, 43, 0.18),
+    var(--inset-hi);
+}
+#vm-debug[hidden] {
+  display: none;
+}
+#vm-debug > .panel {
+  position: static;
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  gap: 12px;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  max-height: none;
+  overflow: hidden;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  transform: none;
+}
+/* Separate debug status and call-log blocks into cards; spacing and outlines keep them distinct. */
+#vm-debug .vm-debug-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 3px;
+  border: 1px solid rgba(216, 58, 48, 0.36);
+  border-radius: 2px;
+  background: rgba(0, 0, 0, 0.42);
+}
+#vm-debug .vm-debug-tabs button {
+  border: 0;
+  border-radius: 1px;
+  padding: 7px 10px;
+  color: var(--ink-dim);
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+#vm-debug .vm-debug-tabs button[aria-selected="true"] {
+  color: #fff;
+  background: linear-gradient(180deg, rgba(216, 58, 48, 0.42), rgba(91, 25, 22, 0.42));
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 90, 71, 0.42),
+    0 0 12px rgba(216, 58, 48, 0.12);
+}
+#vm-debug .vm-debug-pane[hidden] {
+  display: none;
+}
+#vm-debug .vm-debug-summary {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 8px;
+  padding-right: 2px;
+  scrollbar-width: thin;
+}
+#vm-debug .vm-debug-trace {
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: auto minmax(100px, 1fr);
+  gap: 8px;
+}
+#vm-debug .vm-debug-section {
+  min-width: 0;
+  overflow: hidden;
+  background: rgba(119, 128, 130, 0.065);
+  border: 1px solid rgba(135, 144, 153, 0.25);
+  border-radius: 2px;
+}
+#vm-debug .vm-debug-section h4 {
+  margin: 0;
+  padding: 6px 8px 6px 12px;
+  color: #f0b84a;
+  font-size: 12px;
+  border-bottom: 1px solid rgba(216, 58, 48, 0.28);
+  border-left: 3px solid var(--alert);
+  background: rgba(0, 0, 0, 0.34);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+#vm-debug .vm-debug-section-scrollable {
+  min-height: 0;
+  overflow: auto;
+  scrollbar-width: thin;
+}
+#vm-debug .vm-debug-section-scrollable h4 {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+#vm-debug .vm-debug-section table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+#vm-debug .vm-debug-section tr + tr {
+  border-top: 1px solid rgba(135, 144, 153, 0.12);
+}
+#vm-debug .vm-debug-section th,
+#vm-debug .vm-debug-section td {
+  padding: 4px 7px;
+  text-align: left;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+#vm-debug .vm-debug-section th {
+  width: 38%;
+  color: #98a19f;
+  font-weight: 400;
+}
+#vm-debug .vm-debug-section td {
+  color: #e1e3df;
+}
+#vm-debug .vm-debug-summary > .vm-debug-section:nth-child(1) {
+  grid-column: 1 / -1;
+}
+#vm-debug .vm-debug-trace .vm-debug-section th {
+  width: auto;
+}
+#vm-debug .vm-debug-trace .vm-debug-section td {
+  width: 72px;
+  text-align: right;
+  color: #9fcaa5;
+}
+@container game-viewport (max-width: 1100px) {
+  #vm-debug .vm-debug-summary {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto minmax(120px, 1fr) minmax(120px, 1fr);
+  }
+  #vm-debug .vm-debug-section:nth-child(n) {
+    grid-column: auto;
+  }
+}
+#vm-debug .vm-debug-log {
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 100px;
+  margin: 0;
+  overflow: auto;
+  white-space: pre;
+  color: #9fcaa5;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(216, 58, 48, 0.26);
+  border-radius: 2px;
+  padding: 10px;
+}
+@container game-viewport (min-width: 1540px) {
+  #vm-debug {
+    width: min(430px, calc((100cqw - 800px) / 2 - 20px));
+    min-width: 350px;
+  }
+}
+@container game-viewport (max-width: 860px) {
+  /* On narrow screens, use a right-edge overlay so the sidebar does not squeeze out the game; collapse it with the backtick key after debugging. */
+  #vm-debug {
+    position: fixed;
+    top: var(--safe-top);
+    right: 0;
+    bottom: var(--safe-bottom);
+    width: min(430px, 88cqw);
+    min-width: 0;
+  }
+}
+
+#ui {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  font-family: "Microsoft JhengHei", "PingFang TC", sans-serif;
+}
+#ui > * {
+  pointer-events: auto;
+}
+/* Native RA2 dialog scrollbars: dark steel tracks, red borders, CSS-ridged thumbs, and up/down arrows. */
+:where(.panel, #vm-debug *) {
+  scrollbar-width: auto;
+  scrollbar-color: #3a4145 #101315;
+}
+:where(.panel, #vm-debug *)::-webkit-scrollbar {
+  width: 19px;
+  height: 19px;
+}
+:where(.panel, #vm-debug *)::-webkit-scrollbar-track {
+  background: rgba(16, 19, 21, 0.5);
+  border-left: 1px solid #8f1d1a;
+  border-right: 1px solid #8f1d1a;
+}
+:where(.panel, #vm-debug *)::-webkit-scrollbar-thumb {
+  background: linear-gradient(90deg, #303638, #687174 42%, #3a4145 58%, #202426);
+  border: 1px solid #8f1d1a;
+  border-radius: 0;
+}
+/* Horizontal scrollbars use solid steel thumbs with red borders and hidden buttons instead of vertical-scrollbar parts. */
+:where(.panel, #vm-debug *)::-webkit-scrollbar-thumb:horizontal {
+  background: #3a4145;
+}
+:where(.panel, #vm-debug *)::-webkit-scrollbar-button:horizontal {
+  display: none;
+}
+:where(.panel, #vm-debug *)::-webkit-scrollbar-button {
+  width: 19px;
+  height: 19px;
+  background: #3a4145;
+  border: 1px solid #8f1d1a;
+}
+:where(.panel, #vm-debug *)::-webkit-scrollbar-button:vertical:increment {
+  background: linear-gradient(135deg, transparent 42%, #ddd 43% 57%, transparent 58%), #3a4145;
+}
+:where(.panel, #vm-debug *)::-webkit-scrollbar-button:vertical:increment:hover {
+  background-color: #566064;
+}
+:where(.panel, #vm-debug *)::-webkit-scrollbar-button:vertical:decrement {
+  background: linear-gradient(45deg, transparent 42%, #ddd 43% 57%, transparent 58%), #3a4145;
+}
+:where(.panel, #vm-debug *)::-webkit-scrollbar-button:vertical:decrement:hover {
+  background-color: #566064;
+}
+.panel {
+  position: fixed;
+  background: var(--panel-bg);
+  color: var(--ink);
+  border: 1px solid var(--panel-border);
+  border-radius: 2px;
+  padding: 16px 18px;
+  font-size: 13px;
+  line-height: 1.5;
+  max-height: calc(100cqh - 40px);
+  overflow: auto;
+  box-sizing: border-box;
+  box-shadow:
+    0 12px 44px rgba(0, 0, 0, 0.78),
+    inset 3px 0 0 rgba(231, 165, 43, 0.2),
+    var(--inset-hi);
+}
+.panel h3 {
+  position: relative;
+  margin: 0 0 8px;
+  padding-left: 12px;
+  font:
+    700 14px / 1.35 Consolas,
+    "Microsoft JhengHei",
+    sans-serif;
+  letter-spacing: 0.12em;
+  color: #fff;
+  text-transform: uppercase;
+}
+.panel h3::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 2px;
+  bottom: 2px;
+  width: 4px;
+  background: linear-gradient(180deg, var(--alert-bright), #7a1714);
+  box-shadow: 0 0 9px rgba(216, 58, 48, 0.42);
+}
+.game-folder-panel p {
+  margin: 10px 0;
+}
+.folder-button {
+  appearance: none;
+  border: 1px solid #7e302b;
+  border-radius: 1px;
+  padding: 9px 14px;
+  background: linear-gradient(180deg, #3a2827, #1b1717);
+  color: #f0e7e4;
+  font:
+    700 13px Consolas,
+    "Microsoft JhengHei",
+    sans-serif;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  box-shadow:
+    var(--inset-hi),
+    0 2px 8px rgba(0, 0, 0, 0.35);
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.12s ease,
+    box-shadow 0.15s ease;
+}
+.folder-button:hover {
+  background: linear-gradient(180deg, #8e2f29, #4e1d1a);
+  color: #fff;
+  border-color: var(--alert-bright);
+  box-shadow:
+    var(--inset-hi),
+    0 4px 14px rgba(0, 0, 0, 0.55),
+    0 0 10px rgba(216, 58, 48, 0.18);
+}
+.folder-button:active {
+  transform: translateY(1px);
+}
+.folder-button:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+/* Westwood dialog styling for the original-game-file finder, referencing Chrono Divide's message-box: translucent white background, raised gray border, yellow command text, and red command buttons matching RA2 dialogs. */
+.message-box.game-folder-panel {
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px outset #8d8d8d;
+  border-radius: 0;
+  color: #ff0;
+  box-shadow: 0 14px 50px rgba(0, 0, 0, 0.82);
+  font-family: "Fira Sans Condensed", "Arial Narrow", Arial, sans-serif;
+}
+.message-box.game-folder-panel h3 {
+  margin: 0 0 8px;
+  padding: 0;
+  background: none;
+  border: none;
+  text-align: left;
+  text-shadow: none;
+  font:
+    700 15px / 1.3 "Fira Sans Condensed",
+    "Arial Narrow",
+    Arial,
+    sans-serif;
+  letter-spacing: 0;
+  color: #ff0;
+  text-transform: none;
+}
+.message-box.game-folder-panel h3::before {
+  display: none;
+}
+.message-box .picker-shortcuts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+/* Hide the toolbar while the narrow-screen resource picker is open. */
+@container game-viewport (max-width: 560px) {
+  body:has(.game-folder-panel) #vm-controls {
+    display: none;
+  }
+}
+.custom-map-dialog {
+  max-width: 620px;
+  width: calc(100cqw - 48px);
+  max-height: 80cqh;
+  overflow: auto;
+  background: #20191a;
+  color: #eee;
+  border: 1px solid #b65f5f;
+}
+.message-box .dialog-button {
+  appearance: none;
+  align-self: flex-end;
+  background: #8b0000;
+  color: #ff0;
+  border: 1px outset #f00;
+  padding: 3px 18px;
+  cursor: pointer;
+  font:
+    700 13px "Fira Sans Condensed",
+    "Arial Narrow",
+    Arial,
+    sans-serif;
+}
+.message-box .dialog-button:hover {
+  background: #a80000;
+}
+.message-box .dialog-button:active {
+  border-style: inset;
+}
+.message-box .dialog-button:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+/* Local-archive file manifest: loaded (green check), missing (red cross), or optional (gray). */
+.manifest-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin: 10px 0 4px;
+  padding: 8px 10px;
+  border: 1px outset #8d8d8d;
+  font:
+    700 12px / 1.6 "Fira Sans Condensed",
+    "Arial Narrow",
+    Arial,
+    sans-serif;
+}
+.manifest-checklist[hidden] {
+  display: none;
+}
+.manifest-checklist .manifest-line.ok {
+  color: #8fd48f;
+}
+.manifest-checklist .manifest-line.missing {
+  color: #ff6a5e;
+}
+.manifest-checklist .manifest-line.optional {
+  color: #8f8f8f;
+  font-weight: 400;
+}
+/* BadPage.htm-style error page: bold body text echoes the large red heading. */
+.bad-page pre {
+  font-weight: 700;
+}
+/* Game-selection cards prioritize icons over titles. Downscale 96px icons by an integer factor of 2 to 48px, rendering 1:1 on HiDPI displays. */
+.game-icon-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 86px;
+  padding: 11px 13px 9px;
+  border-radius: 1px;
+}
+.game-icon-button:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    var(--inset-hi),
+    0 8px 22px rgba(0, 0, 0, 0.62),
+    0 0 16px rgba(216, 58, 48, 0.25);
+}
+.game-icon-button .game-icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border: 2px outset #aaa;
+  background: linear-gradient(135deg, #5b0000, #d00000 48%, #4a0000 52%, #1b0000);
+  color: #ff0;
+  font:
+    700 12px / 1 Arial,
+    sans-serif;
+  text-shadow: 2px 2px #000;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.5));
+}
+.game-icon-button .game-icon-caption {
+  font-size: 12px;
+  line-height: 1.2;
+}
+/* Import-button row in each version section, with Select files / Select folder controls. */
+.message-box .game-package-picks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 6px 0 2px;
+}
+.mono {
+  font-family: Consolas, monospace;
+}
+/* Place controls/status on the left: 4:3 side margins offer more space than a top bar and preserve game height. Fit panels to content. */
+#vm-controls {
+  position: fixed;
+  z-index: 15;
+  box-sizing: border-box;
+  top: calc(var(--safe-top) + 10px);
+  left: calc(var(--safe-left) + 10px);
+  width: 176px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: stretch;
+  pointer-events: none;
+  color: #cfc8ae;
+  font:
+    12px Consolas,
+    monospace;
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 2px;
+  box-shadow:
+    0 10px 34px rgba(0, 0, 0, 0.65),
+    inset 3px 0 0 rgba(231, 165, 43, 0.2),
+    var(--inset-hi);
+}
+#vm-controls > * {
+  pointer-events: auto;
+}
+/* Disable text selection on controls so in-game dragging/double-clicking does not highlight buttons or status text. Keep #vm-debug selectable for copying hypercall logs. */
+#vm-controls,
+#ui .panel {
+  user-select: none;
+  -webkit-user-select: none;
+}
+#vm-controls.collapsed {
+  width: 184px;
+  padding: 8px;
+  gap: 7px;
+}
+#vm-controls.collapsed > :not(#vm-controls-toggle) {
+  display: none;
+}
+#vm-controls-toggle {
+  align-self: flex-start;
+  min-width: 36px;
+}
+#vm-controls .brand {
+  align-self: center;
+  padding: 2px 0 4px;
+  background: linear-gradient(180deg, #ffb1a7, var(--alert-bright) 48%, #8d211c);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font:
+    700 15px / 1.2 "Microsoft JhengHei",
+    "PingFang TC",
+    sans-serif;
+  letter-spacing: 0.12em;
+}
+#vm-controls output {
+  display: block;
+}
+#vm-fps {
+  color: #9fcaa5;
+}
+#vm-performance {
+  color: #8ab8d8;
+}
+#vm-controls .toolbar-button {
+  width: 100%;
+  min-height: 32px;
+}
+.rate-controls,
+.volume-controls,
+.resolution-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.vm-clock-controls {
+  justify-content: center;
+}
+.vm-clock-controls span {
+  margin-right: 2px;
+  color: var(--ink-dim);
+}
+.volume-controls,
+.resolution-controls {
+  justify-content: center;
+  color: var(--ink-dim);
+}
+.volume-controls .label,
+.resolution-controls .label {
+  margin-right: 2px;
+}
+/* Chrono Divide-style slider-item: label + range + read-only value box (see its style.css). */
+.slider-item .slider-fields {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+#vm-volume {
+  flex: 1;
+  min-width: 64px;
+}
+#vm-volume-value {
+  box-sizing: border-box;
+  width: 40px;
+  padding: 1px 2px;
+  text-align: center;
+  color: #cfc8ae;
+  font-variant-numeric: tabular-nums;
+}
+/* Chrono Divide-style select: .select > .select-value (current value) + .select-options (popup list). */
+.resolution-controls .select {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+.resolution-controls .select-value {
+  cursor: pointer;
+}
+.resolution-controls .select-options {
+  position: absolute;
+  top: calc(100% + 2px);
+  left: 0;
+  right: 0;
+  z-index: 40;
+  max-height: 220px;
+  overflow-y: auto;
+}
+.toolbar-button,
+.rate-button {
+  appearance: none;
+  min-width: 38px;
+  padding: 3px 7px;
+  border: 1px solid #67302d;
+  border-radius: 1px;
+  color: #d7dcda;
+  background: linear-gradient(180deg, #302525, #181718);
+  cursor: pointer;
+  font: inherit;
+  box-shadow:
+    var(--inset-hi),
+    0 2px 6px rgba(0, 0, 0, 0.35);
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+.toolbar-button:hover,
+.rate-button:hover {
+  color: #fff;
+  border-color: var(--alert-bright);
+  background: linear-gradient(180deg, #722b27, #381c1b);
+}
+.toolbar-button:active,
+.rate-button:active {
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.45);
+}
+.rate-button[aria-pressed="true"] {
+  color: #fff;
+  border-color: var(--alert-bright);
+  background: linear-gradient(180deg, #e94c40, #8f211c);
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.22),
+    0 2px 8px rgba(216, 58, 48, 0.35);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+:where(button, select, input, a):not(#vm-touch-joystick):focus-visible {
+  outline: 2px solid var(--gold-bright);
+  outline-offset: 2px;
+}
+.resolution-controls {
+  justify-content: space-between;
+  color: var(--ink-dim);
+}
+/* Gold sliders: consistent range styling for volume, threshold, concentration, and baseline throughout the site. */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 18px;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+}
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, #2c2615, #3a3220);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.55);
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 15px;
+  height: 15px;
+  margin-top: -5.5px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 32% 30%, #f6e6ae, var(--gold) 55%, var(--gold-soft));
+  border: 1px solid var(--gold-dim);
+  box-shadow:
+    0 1px 4px rgba(0, 0, 0, 0.6),
+    0 0 6px rgba(216, 191, 114, 0.25);
+}
+input[type="range"]:active::-webkit-slider-thumb {
+  background: radial-gradient(circle at 32% 30%, #fff3c4, #e8d28c 55%, #b8963f);
+}
+input[type="range"]::-moz-range-track {
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, #2c2615, #3a3220);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.55);
+}
+input[type="range"]::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 32% 30%, #f6e6ae, var(--gold) 55%, var(--gold-soft));
+  border: 1px solid var(--gold-dim);
+  box-shadow:
+    0 1px 4px rgba(0, 0, 0, 0.6),
+    0 0 6px rgba(216, 191, 114, 0.25);
+}
+@keyframes vm-dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+#vm-cheat-dialog {
+  box-sizing: border-box;
+  width: min(700px, calc(100cqw - 24px));
+  max-height: calc(100cqh - 32px);
+  overflow: auto;
+  overscroll-behavior: contain;
+  color: var(--ink);
+  background: var(--panel-bg);
+  border: 1px solid var(--gold-soft);
+  border-radius: 12px;
+  padding: 0;
+  box-shadow:
+    0 16px 60px rgba(0, 0, 0, 0.78),
+    var(--inset-hi);
+  font:
+    14px "Microsoft JhengHei",
+    "PingFang TC",
+    sans-serif;
+}
+#vm-cheat-dialog[open] {
+  animation: vm-dialog-in 0.16s ease-out;
+}
+#vm-cheat-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(3px);
+}
+#vm-cheat-dialog,
+#vm-cheat-dialog button,
+#vm-cheat-dialog label {
+  user-select: none;
+  -webkit-user-select: none;
+}
+#vm-cheat-dialog input {
+  user-select: text;
+  -webkit-user-select: text;
+}
+#vm-cheat-dialog header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid #493d21;
+  border-radius: 12px 12px 0 0;
+  background: linear-gradient(180deg, rgba(56, 46, 22, 0.55), rgba(24, 20, 10, 0.2));
+}
+#vm-cheat-dialog h2 {
+  margin: 0;
+  color: var(--gold-bright);
+  font-size: 16px;
+  letter-spacing: 0.06em;
+}
+#vm-cheat-content {
+  padding: 14px 16px 4px;
+}
+.cheat-guide-steps {
+  margin: 0 0 12px;
+  color: #d9cfb1;
+  line-height: 1.65;
+}
+.cheat-entry-list {
+  display: grid;
+  gap: 8px;
+}
+.cheat-entry {
+  padding: 10px;
+  border: 1px solid rgba(200, 168, 96, 0.2);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.18);
+}
+.cheat-entry-top {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.cheat-code {
+  display: inline-block;
+  padding: 3px 7px;
+  border-radius: 4px;
+  color: #1d1608;
+  background: linear-gradient(180deg, #f4e3a0, var(--gold));
+  font-size: 13px;
+  font-weight: 700;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  user-select: text;
+  -webkit-user-select: text;
+}
+.cheat-effect {
+  color: #eee4c6;
+  line-height: 1.5;
+}
+.cheat-hint {
+  margin: 6px 0 8px;
+  color: var(--ink-faint);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.cheat-entry-actions,
+.cheat-custom-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.cheat-entry-actions .toolbar-button {
+  width: auto;
+  min-height: 30px;
+}
+.cheat-custom {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(200, 168, 96, 0.2);
+}
+#vm-cheat-dialog h3 {
+  margin: 0 0 8px;
+  color: var(--gold-bright);
+  font-size: 14px;
+}
+.cheat-custom-form label {
+  color: var(--ink-dim);
+  font-size: 13px;
+}
+#vm-cheat-custom-input {
+  box-sizing: border-box;
+  flex: 1 1 220px;
+  min-width: 0;
+  height: 38px;
+  padding: 6px 9px;
+  border: 1px solid #554927;
+  border-radius: 5px;
+  color: #efe7c8;
+  background: linear-gradient(180deg, #1d1a14, #141210);
+  font:
+    14px Consolas,
+    monospace;
+  color-scheme: dark;
+}
+.cheat-guide-notes {
+  margin: 14px 0 0;
+  padding: 12px 16px 16px 32px;
+  color: var(--ink-faint);
+  font-size: 12px;
+  line-height: 1.6;
+  border-top: 1px solid rgba(200, 168, 96, 0.16);
+}
+.cheat-status {
+  min-height: 1.5em;
+  margin: 0;
+  padding: 0 16px 14px;
+  color: #9fcaa5;
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.cheat-status.error {
+  color: #ef7777;
+}
+@container game-viewport (max-width: 640px) {
+  #vm-performance {
+    display: none;
+  }
+  #vm-controls {
+    width: 132px;
+    padding: 8px;
+  }
+  .toolbar-button,
+  .rate-button {
+    min-height: 40px;
+  }
+  #vm-cheat-dialog {
+    width: min(700px, calc(100cqw - 16px));
+  }
+  #vm-cheat-content {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+  .cheat-status {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+}
+/* WeChat group QR dialog shares #vm-cheat-dialog styling; constrain the remote image width here. */
+.join-group-dialog {
+  box-sizing: border-box;
+  width: min(340px, calc(100cqw - 24px));
+  max-height: calc(100cqh - 24px);
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: 0;
+  color: var(--ink);
+  background: var(--panel-bg);
+  border: 1px solid var(--gold-soft);
+  border-radius: 12px;
+  box-shadow:
+    0 16px 60px rgba(0, 0, 0, 0.78),
+    var(--inset-hi);
+  font:
+    14px "Microsoft JhengHei",
+    "PingFang TC",
+    sans-serif;
+}
+.join-group-dialog[open] {
+  animation: vm-dialog-in 0.16s ease-out;
+}
+.join-group-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(3px);
+}
+.join-group-dialog header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border-bottom: 1px solid #493d21;
+  border-radius: 12px 12px 0 0;
+  background: linear-gradient(180deg, rgba(56, 46, 22, 0.55), rgba(24, 20, 10, 0.2));
+}
+.join-group-dialog h2 {
+  margin: 0;
+  color: var(--gold-bright);
+  font-size: 16px;
+  letter-spacing: 0.06em;
+}
+.join-group-dialog .join-group-qr {
+  display: block;
+  width: min(280px, calc(100cqw - 88px));
+  height: auto;
+  margin: 14px auto 0;
+}
+.join-group-dialog .join-group-hint {
+  margin: 10px 0 14px;
+  text-align: center;
+  color: var(--ink-dim);
+  font-size: 12px;
+}
+.join-group-dialog .join-group-hint.error {
+  color: #ef7777;
+}
+#vm-touch-controls {
+  position: fixed;
+  z-index: 25;
+  left: var(--safe-left);
+  right: var(--safe-right);
+  bottom: var(--safe-bottom);
+  display: grid;
+  gap: 6px;
+  padding: 8px;
+  background: linear-gradient(180deg, rgba(20, 18, 34, 0.88), rgba(10, 9, 20, 0.88));
+  border-top: 1px solid var(--panel-border);
+  box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.45);
+  justify-content: center;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+#vm-touch-controls[hidden] {
+  display: none;
+}
+#vm-touch-controls .touch-key {
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid #65552d;
+  border-radius: 8px;
+  color: var(--gold-bright);
+  background: linear-gradient(180deg, #241f12, #16120c);
+  font:
+    700 14px / 1 "Microsoft JhengHei",
+    "PingFang TC",
+    sans-serif;
+  box-shadow:
+    var(--inset-hi),
+    0 2px 5px rgba(0, 0, 0, 0.4);
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+#vm-touch-controls .touch-key:active {
+  background: linear-gradient(180deg, #443416, #2c2412);
+  border-color: var(--gold-soft);
+  color: #fff;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
+  transform: translateY(1px);
+}
+#vm-touch-controls .touch-collapse {
+  border-color: transparent;
+  background: transparent;
+  color: var(--ink-dim);
+  box-shadow: none;
+}
+#vm-touch-controls .touch-keyboard-icon {
+  display: block;
+  width: 24px;
+  height: 16px;
+  margin: auto;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.5;
+}
+#vm-touch-controls .touch-collapse:active {
+  background: transparent;
+  box-shadow: none;
+  transform: none;
+}
+#vm-touch-controls.collapsed {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+#vm-touch-controls.collapsed .touch-key:not(.touch-collapse) {
+  display: none;
+}
+/* Directional pad: up / left-right / down */
+#vm-touch-controls .touch-dpad {
+  display: grid;
+  grid-template-columns: repeat(3, 44px);
+  gap: 4px;
+  justify-content: center;
+}
+#vm-touch-controls .touch-dpad .touch-key[data-code="ArrowUp"] {
+  grid-column: 2;
+  grid-row: 1;
+}
+#vm-touch-controls .touch-dpad .touch-key[data-code="ArrowLeft"] {
+  grid-column: 1;
+  grid-row: 2;
+}
+#vm-touch-controls .touch-dpad .touch-key[data-code="ArrowRight"] {
+  grid-column: 3;
+  grid-row: 2;
+}
+#vm-touch-controls .touch-dpad .touch-key[data-code="ArrowDown"] {
+  grid-column: 2;
+  grid-row: 3;
+}
+#vm-touch-controls .touch-dpad .touch-key {
+  font-size: 0;
+}
+#vm-touch-controls .touch-dpad .touch-key::before {
+  content: "";
+  display: block;
+  width: 0;
+  height: 0;
+  margin: auto;
+  border-style: solid;
+}
+#vm-touch-controls .touch-dpad .touch-key[data-code="ArrowUp"]::before {
+  border-width: 0 10px 12px;
+  border-color: transparent transparent currentColor;
+}
+#vm-touch-controls .touch-dpad .touch-key[data-code="ArrowRight"]::before {
+  border-width: 10px 0 10px 12px;
+  border-color: transparent transparent transparent currentColor;
+}
+#vm-touch-controls .touch-dpad .touch-key[data-code="ArrowDown"]::before {
+  border-width: 12px 10px 0;
+  border-color: currentColor transparent transparent;
+}
+#vm-touch-controls .touch-dpad .touch-key[data-code="ArrowLeft"]::before {
+  border-width: 10px 12px 10px 0;
+  border-color: transparent currentColor transparent transparent;
+}
+/* Joystick: transparent floating overlay, occupying no layout space and leaving the game area intact */
+#vm-touch-joystick {
+  position: fixed;
+  z-index: 24;
+  left: calc(var(--safe-left) + 12px);
+  bottom: calc(var(--safe-bottom) + 12px);
+  width: 116px;
+  height: 116px;
+  border-radius: 50%;
+  border: 1px solid rgba(168, 139, 66, 0.5);
+  background: radial-gradient(circle, rgba(40, 34, 20, 0.45), rgba(20, 17, 10, 0.22));
+  box-shadow: inset 0 0 18px rgba(216, 191, 114, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+#vm-touch-joystick[hidden] {
+  display: none;
+}
+#vm-touch-joystick .joystick-knob {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #f0dda0, #8a7134 60%, #5c4a20);
+  border: 1px solid rgba(240, 216, 120, 0.75);
+  box-shadow:
+    0 3px 10px rgba(0, 0, 0, 0.5),
+    0 0 12px rgba(216, 191, 114, 0.25);
+}
+@container game-viewport (max-height: 600px) {
+  #vm-touch-controls {
+    top: var(--safe-top);
+    bottom: var(--safe-bottom);
+    right: 0;
+    left: auto;
+    grid-template-columns: repeat(2, 44px);
+    border-top: none;
+    border-left: 1px solid var(--panel-border);
+    align-content: center;
+  }
+  /* Short landscape viewport: replace directional buttons with the joystick overlay */
+  #vm-touch-controls .touch-dpad {
+    display: none;
+  }
+}
+
+/* Chrono Divide / RA2 client shell: flat black-gray console, light-gray bevels, and pure yellow text; reserve warning red for primary actions. Restyle only web UI, without textures or filters over the game canvas. */
+:root {
+  --ra2-yellow: var(--ra2-button-text);
+  --ra2-yellow-dim: #c9c500;
+  --ra2-button-text: #d8cf00;
+  --ra2-red: #bd0803;
+  --ra2-red-hot: #ed160d;
+  --ra2-red-dark: #690300;
+  --ra2-face: #202020;
+  --ra2-face-raised: #303030;
+  --ra2-edge-hi: #969696;
+  --ra2-edge-mid: #565656;
+  --ra2-edge-lo: #050505;
+  --ra2-button-red-edge: #ff0800;
+  --ra2-button-red-hot: #e00000;
+  --ra2-button-red-mid: #d40000;
+  --ra2-button-red-deep: #6b0000;
+  --ra2-button-red-shadow: #180000;
+  --ra2-button-orange-edge: #ff7900;
+  --ra2-button-orange-hot: #ffd24d;
+  --ra2-button-orange-mid: #ff9700;
+  --ra2-button-orange-deep: #9c3500;
+  --gold: var(--ra2-yellow);
+  --gold-bright: #ffff39;
+  --gold-soft: var(--ra2-yellow-dim);
+  --gold-dim: #706e00;
+  --ink: #ededed;
+  --ink-dim: #aaa;
+  --ink-faint: #777;
+  --panel-bg: #191919;
+  --panel-border: var(--ra2-edge-hi);
+  --inset-hi: inset 1px 1px 0 rgba(255, 255, 255, 0.16), inset -1px -1px 0 #070707;
+}
+html,
+body {
+  background: #3d3d3d;
+}
+body,
+#ui,
+#vm-controls,
+#vm-debug,
+button,
+select,
+input,
+dialog {
+  font-family: "Arial Narrow", "Liberation Sans Narrow", Arial, "Microsoft JhengHei", sans-serif;
+}
+#stage {
+  background: #000;
+}
+#screen-frame {
+  background: #000;
+}
+
+.panel,
+#vm-controls,
+#vm-debug {
+  color: #eee;
+  background-color: var(--ra2-face);
+  background-image:
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.016) 0 1px, transparent 1px 3px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.025), transparent 18%, transparent 82%, rgba(0, 0, 0, 0.2));
+  border: 1px solid var(--ra2-edge-hi);
+  border-right-color: var(--ra2-edge-lo);
+  border-bottom-color: var(--ra2-edge-lo);
+  border-radius: 0;
+  outline: 1px solid #080808;
+  box-shadow:
+    inset 1px 1px 0 #505050,
+    inset -1px -1px 0 #101010,
+    3px 3px 0 rgba(0, 0, 0, 0.72);
+  backdrop-filter: none;
+}
+.panel {
+  padding: 14px 16px;
+}
+.panel h3,
+#vm-debug > .panel > h3 {
+  margin: 0 0 12px;
+  padding: 3px 8px 5px;
+  color: var(--ra2-yellow);
+  background: #111;
+  border: 1px solid #444;
+  border-bottom-color: #050505;
+  font:
+    700 15px / 1.2 "Arial Narrow",
+    "Liberation Sans Narrow",
+    Arial,
+    sans-serif;
+  letter-spacing: 0.035em;
+  text-align: center;
+  text-transform: none;
+  text-shadow: 1px 1px 0 #000;
+}
+.panel h3::before {
+  display: none;
+}
+.game-folder-panel {
+  color: var(--ra2-yellow);
+  /* The RA2 menu theme in components/ra2menu/ supplies the first screen's own backdrop. */
+  background: #0d0d0d;
+}
+.game-folder-panel p {
+  color: var(--ra2-yellow);
+  font-weight: 700;
+  text-align: center;
+}
+.game-folder-panel p.disclaimer {
+  margin-top: 12px;
+  color: #8f8f8f;
+  font-weight: 400;
+  font-size: 11px;
+  line-height: 1.55;
+}
+.game-folder-panel p.join-group-hook {
+  margin-top: 4px;
+  color: #8f8f8f;
+  font-weight: 400;
+  font-size: 11px;
+}
+.game-folder-panel .join-group-link {
+  background: none;
+  border: 0;
+  padding: 0;
+  margin-left: 6px;
+  color: #9cc6e8;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.game-folder-panel .join-group-link:hover {
+  color: #fff;
+}
+.game-folder-panel .mono {
+  color: #fff;
+}
+
+.toolbar-button,
+.rate-button,
+#vm-debug .vm-debug-tabs button,
+#vm-touch-controls .touch-key {
+  appearance: none;
+  color: var(--ra2-yellow);
+  background: linear-gradient(180deg, #4a4a4a 0, #383838 48%, #292929 52%, #202020 100%);
+  border: 1px solid #777;
+  border-right-color: #111;
+  border-bottom-color: #0a0a0a;
+  border-radius: 0;
+  box-shadow:
+    inset 1px 1px 0 rgba(255, 255, 255, 0.14),
+    inset -1px -1px 0 rgba(0, 0, 0, 0.45),
+    2px 2px 0 #080808;
+  font-weight: 700;
+  letter-spacing: 0.015em;
+  text-shadow: 1px 1px 0 #000;
+  transition: none;
+}
+.toolbar-button:hover,
+.rate-button:hover,
+#vm-debug .vm-debug-tabs button:hover,
+#vm-touch-controls .touch-key:hover {
+  color: #ffff5c;
+  background: linear-gradient(180deg, #5e5e5e, #464646 50%, #333 51%, #282828);
+  border-color: #aaa #151515 #151515 #aaa;
+  box-shadow:
+    inset 1px 1px 0 rgba(255, 255, 255, 0.22),
+    inset -1px -1px 0 #111,
+    2px 2px 0 #080808;
+  transform: none;
+}
+.toolbar-button:active,
+.rate-button:active,
+#vm-debug .vm-debug-tabs button:active {
+  color: var(--ra2-yellow);
+  background: #242424;
+  border-color: #080808 #777 #777 #080808;
+  box-shadow: inset 1px 1px 2px #050505;
+  transform: translate(1px, 1px);
+}
+.toolbar-button:disabled,
+.rate-button:disabled {
+  color: #686800;
+  background: #252525;
+  border-color: #464646 #111 #111 #464646;
+  text-shadow: none;
+  opacity: 1;
+}
+.folder-button {
+  appearance: none;
+  color: var(--ra2-yellow);
+  background: linear-gradient(180deg, var(--ra2-red-hot) 0, var(--ra2-red) 48%, #8d0400 52%, var(--ra2-red-dark) 100%);
+  border: 1px solid #ff4a3e;
+  border-right-color: #4b0000;
+  border-bottom-color: #390000;
+  border-radius: 0;
+  box-shadow:
+    inset 1px 1px 0 rgba(255, 255, 255, 0.2),
+    inset -1px -1px 0 rgba(0, 0, 0, 0.45),
+    2px 2px 0 #080808;
+  font-weight: 700;
+  text-shadow: 1px 1px 0 #310000;
+  transition: none;
+}
+.folder-button:hover {
+  color: #fff;
+  background: linear-gradient(180deg, #ff3024, #d20a04 50%, #8b0300 51%, #730300);
+  border-color: #ff8b80 #4b0000 #390000 #ff8b80;
+  transform: none;
+}
+.folder-button:active {
+  color: #fff;
+  background: #850400;
+  border-color: #3d0000 #e3342c #e3342c #3d0000;
+  box-shadow: inset 1px 1px 2px #310000;
+  transform: translate(1px, 1px);
+}
+.folder-button:disabled {
+  color: #777300;
+  background: #3e1b19;
+  border-color: #61302d #25100f #25100f #61302d;
+  text-shadow: none;
+  opacity: 1;
+}
+.rate-button[aria-pressed="true"] {
+  color: #111;
+  background: linear-gradient(180deg, #ffff62, #d5cd00 52%, #9b9500 53%, #777300);
+  border-color: #ffffae #4c4900 #4c4900 #ffffae;
+  box-shadow:
+    inset 1px 1px 0 rgba(255, 255, 255, 0.7),
+    inset -1px -1px 0 #4c4900,
+    2px 2px 0 #080808;
+  text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+.game-icon-button {
+  color: #fff;
+  background: linear-gradient(180deg, #777, #5d5d5d 48%, #4a4a4a 52%, #383838);
+  border-color: #aaa #222 #222 #aaa;
+  min-width: 92px;
+}
+.game-icon-button:hover {
+  color: var(--ra2-yellow);
+  background: linear-gradient(180deg, #8b8b8b, #686868 48%, #505050 52%, #3d3d3d);
+  border-color: #d0d0d0 #1c1c1c #1c1c1c #d0d0d0;
+  box-shadow:
+    inset 1px 1px 0 #aaa,
+    inset -1px -1px 0 #222,
+    2px 2px 0 #080808;
+}
+.game-icon-button .game-icon {
+  display: grid;
+  place-items: center;
+  filter: drop-shadow(2px 2px 0 #222);
+}
+.game-icon-button .game-icon-caption {
+  font-weight: 700;
+  text-shadow: 1px 1px 0 #222;
+}
+
+#vm-controls {
+  width: 184px;
+  padding: 8px;
+  gap: 7px;
+  font:
+    700 12px / 1.25 "Arial Narrow",
+    "Liberation Sans Narrow",
+    Arial,
+    sans-serif;
+}
+#vm-controls .brand {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 4px;
+  color: var(--ra2-yellow);
+  font:
+    800 16px / 1 "Arial Narrow",
+    "Liberation Sans Narrow",
+    Arial,
+    sans-serif;
+  letter-spacing: 0.08em;
+  text-align: center;
+  text-shadow: 1px 1px 0 #000;
+}
+#vm-fps {
+  color: #a9d7a9 !important;
+}
+#vm-performance {
+  color: #8fc8e8 !important;
+}
+#vm-controls .toolbar-button {
+  min-height: 28px;
+}
+.vm-clock-controls span,
+.volume-controls span,
+.resolution-controls span {
+  color: var(--ra2-yellow);
+  font-weight: 700;
+}
+
+.resolution-controls .select-value,
+#vm-cheat-custom-input {
+  color: var(--ra2-yellow);
+  background: #111;
+  border: 1px solid #777;
+  border-right-color: #151515;
+  border-bottom-color: #151515;
+  border-radius: 0;
+  box-shadow:
+    inset 1px 1px 0 #050505,
+    inset -1px -1px 0 #444;
+  font-weight: 700;
+}
+input[type="range"]::-webkit-slider-runnable-track {
+  background: #111;
+  border: 1px solid #555;
+  border-radius: 0;
+}
+input[type="range"]::-webkit-slider-thumb {
+  background: linear-gradient(180deg, #ff2419, #8d0300);
+  border-color: #ff766d #3b0000 #3b0000 #ff766d;
+  border-radius: 0;
+}
+
+#vm-debug {
+  padding: 8px;
+  border-left: 1px solid var(--ra2-edge-hi);
+  box-shadow:
+    inset 1px 1px 0 #505050,
+    inset -1px -1px 0 #101010,
+    -3px 0 0 #080808;
+}
+#vm-debug > .panel {
+  gap: 8px;
+}
+#vm-debug .vm-debug-tabs {
+  gap: 5px;
+  padding: 2px;
+  background: #0d0d0d;
+  border: 1px solid #555;
+  border-right-color: #090909;
+  border-bottom-color: #090909;
+  border-radius: 0;
+}
+#vm-debug .vm-debug-tabs button {
+  padding: 6px 8px;
+  color: var(--ra2-yellow);
+  text-transform: none;
+}
+#vm-debug .vm-debug-tabs button[aria-selected="true"] {
+  color: #ff0;
+  background: #a80000;
+  border: 1px inset #f00;
+  box-shadow: none;
+  text-shadow: none;
+}
+#vm-debug .vm-debug-section {
+  background: #171717;
+  border: 1px solid #656565;
+  border-right-color: #090909;
+  border-bottom-color: #090909;
+  border-radius: 0;
+}
+#vm-debug .vm-debug-section h4 {
+  padding: 5px 7px;
+  color: var(--ra2-yellow);
+  background: #0c0c0c;
+  border: 0;
+  border-bottom: 1px solid #4e4e4e;
+  font-size: 12px;
+  text-transform: none;
+  letter-spacing: 0.035em;
+  text-shadow: 1px 1px 0 #000;
+}
+#vm-debug .vm-debug-section tr + tr {
+  border-top-color: #2e2e2e;
+}
+#vm-debug .vm-debug-section th {
+  color: #aaa;
+}
+#vm-debug .vm-debug-section td {
+  color: #eee;
+}
+#vm-debug .vm-debug-trace .vm-debug-section td,
+#vm-debug .vm-debug-log {
+  color: #a9d7a9;
+}
+#vm-debug .vm-debug-log {
+  background: #080808;
+  border: 1px solid #666;
+  border-right-color: #050505;
+  border-bottom-color: #050505;
+  border-radius: 0;
+  box-shadow:
+    inset 1px 1px 0 #000,
+    inset -1px -1px 0 #303030;
+}
+/* Draw scrollbars with CSS in the native RA2 dialog style. */
+:where(.panel, #vm-debug *) {
+  scrollbar-color: #3a4145 #101315;
+}
+:where(.panel, #vm-debug *)::-webkit-scrollbar-track {
+  background: rgba(16, 19, 21, 0.55);
+  border-left: 1px solid #8f1d1a;
+  border-right: 1px solid #8f1d1a;
+}
+:where(.panel, #vm-debug *)::-webkit-scrollbar-thumb {
+  background: linear-gradient(90deg, #303638, #687174 42%, #3a4145 58%, #202426);
+  border: 1px solid #8f1d1a;
+  border-radius: 0;
+}
+:where(.panel, #vm-debug *)::-webkit-scrollbar-thumb:horizontal {
+  background: #3a4145;
+}
+
+/* Client window shell: 800x560 menu content page (Frame/BadPage.htm). Match #screen-frame to canvas dimensions and scale the background page proportionally. */
+#client-page {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  /* The shared SVG equipment fills the shell until the guest draws its menu page. */
+  background: #0d0d0d;
+}
+/* While the game runs, its frame fills the window and the shell disappears. */
+.game-running #client-page {
+  display: none;
+}
+/* Sidebar completion: CSS red three-state toolbar buttons and yellow status readings. */
+#vm-controls output {
+  color: var(--ra2-yellow);
+  font-variant-numeric: tabular-nums;
+}
+#vm-controls .toolbar-button,
+#vm-controls .rate-button {
+  align-self: center;
+  width: 126px;
+  height: 25px;
+  min-height: 25px;
+  padding: 0;
+  color: var(--ra2-button-text);
+  font-weight: 700;
+  background:
+    linear-gradient(180deg, rgba(224, 0, 0, 0.62) 0, transparent 19%, transparent 81%, rgba(224, 0, 0, 0.62) 100%),
+    radial-gradient(
+      ellipse at center,
+      var(--ra2-button-red-hot) 0,
+      var(--ra2-button-red-mid) 36%,
+      var(--ra2-button-red-deep) 70%,
+      var(--ra2-button-red-shadow) 100%
+    );
+  border: 2px solid var(--ra2-button-red-edge);
+  box-shadow:
+    inset 0 0 0 1px #430000,
+    inset 0 0 7px rgba(255, 0, 0, 0.45),
+    0 0 0 1px #260000,
+    0 2px 0 #080000;
+  text-shadow: 1px 1px 0 #4a0000;
+  cursor: pointer;
+}
+#vm-controls .toolbar-button:hover,
+#vm-controls .rate-button:hover {
+  color: var(--ra2-button-text);
+  background:
+    linear-gradient(180deg, rgba(255, 196, 68, 0.95) 0, transparent 19%, transparent 81%, rgba(255, 128, 0, 0.95) 100%),
+    radial-gradient(
+      ellipse at center,
+      var(--ra2-button-orange-hot) 0,
+      var(--ra2-button-orange-mid) 38%,
+      var(--ra2-button-orange-deep) 72%,
+      #2d0b00 100%
+    );
+  border-color: var(--ra2-button-orange-edge);
+  box-shadow:
+    inset 0 0 0 1px #6d2200,
+    inset 0 0 10px rgba(255, 166, 0, 0.95),
+    0 0 0 1px #3b1000,
+    0 2px 0 #080000;
+}
+#vm-controls .toolbar-button:active,
+#vm-controls .rate-button:active {
+  color: var(--ra2-button-text);
+  background:
+    linear-gradient(180deg, rgba(184, 0, 0, 0.9), transparent 25%, transparent 75%, rgba(190, 0, 0, 0.9) 100%),
+    radial-gradient(ellipse at center, #d00000 0, #820000 45%, #2a0000 100%);
+  border-color: #650000 #ff3028 #ff3028 #650000;
+  border-style: inset;
+  box-shadow: inset 0 0 7px #120000;
+}
+/* The open-source link reuses the toolbar look; anchors default to inline content-box sizing, so center its text, drop the underline, and match the border-box buttons beside it. */
+#vm-controls a.toolbar-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  text-decoration: none;
+}
+/* Pressed speed key: retain its pressed frame. */
+#vm-controls .rate-button[aria-pressed="true"] {
+  background:
+    linear-gradient(180deg, rgba(184, 0, 0, 0.9), transparent 25%, transparent 75%, rgba(190, 0, 0, 0.9) 100%),
+    radial-gradient(ellipse at center, #d00000 0, #820000 45%, #2a0000 100%);
+  border-color: #650000 #ff3028 #ff3028 #650000;
+  border-style: inset;
+  box-shadow: inset 0 0 7px #120000;
+}
+#vm-controls #vm-cheat-guides {
+  color: #000;
+  text-shadow: none;
+}
+#vm-controls #vm-cheat-guides:hover,
+#vm-controls #vm-cheat-guides:active {
+  color: #000;
+}
+#vm-controls .toolbar-button:disabled,
+#vm-controls .rate-button:disabled {
+  color: #000;
+  cursor: default;
+}
+/* Temporarily hide clock speed; later restyle as Chrono Divide's slider-item (label + range; see .slider-item in its style.css). */
+#vm-controls .vm-clock-controls {
+  display: none;
+}
+.resolution-controls .select-value {
+  box-sizing: border-box;
+  min-width: 88px;
+  min-height: 22px;
+  padding: 2px 18px 2px 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  color: var(--ra2-yellow);
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--ra2-yellow) 50%),
+    linear-gradient(135deg, var(--ra2-yellow) 50%, transparent 50%),
+    linear-gradient(180deg, #3a3a3a 0, #2b2b2b 50%, #262626 51%, #1c1c1c 100%);
+  background-position:
+    calc(100% - 8px) 45%,
+    calc(100% - 4px) 45%,
+    0 0;
+  background-size:
+    4px 4px,
+    4px 4px,
+    100% 100%;
+  background-repeat: no-repeat;
+  border: 1px solid #777;
+  border-right-color: #111;
+  border-bottom-color: #0a0a0a;
+  border-radius: 0;
+  box-shadow:
+    inset 1px 1px 0 rgba(255, 255, 255, 0.14),
+    inset -1px -1px 0 rgba(0, 0, 0, 0.45),
+    2px 2px 0 #080808;
+  font-weight: 700;
+  text-shadow: 1px 1px 0 #000;
+}
+.resolution-controls .select-value:hover {
+  color: #fff;
+}
+.resolution-controls .select-options {
+  background: #202020;
+  color: var(--ra2-yellow);
+  border: 1px solid #777;
+  border-right-color: #111;
+  border-bottom-color: #0a0a0a;
+  box-shadow: 2px 2px 0 #080808;
+}
+.resolution-controls .select-option {
+  padding: 3px 6px;
+  white-space: nowrap;
+  cursor: pointer;
+  font-weight: 700;
+  text-shadow: 1px 1px 0 #000;
+}
+.resolution-controls .select-option:hover {
+  background: #8f211c;
+  color: #fff;
+}
+.resolution-controls .select.disabled .select-value {
+  color: #686800;
+  cursor: default;
+}
+.resolution-controls .select.disabled .select-value:hover {
+  color: #686800;
+}
+/* Dropdowns avoid fixed-width button sprites; both rows share a label column, and selection fills the remaining width. */
+#vm-controls .resolution-controls > .label {
+  flex: 0 0 36px;
+  margin: 0;
+}
+#vm-controls .toolbar-select {
+  flex: 1 1 0;
+  width: 0;
+  min-width: 0;
+  height: 24px;
+  box-sizing: border-box;
+  padding: 2px 4px;
+  font: inherit;
+  font-weight: 700;
+  color: var(--ra2-yellow);
+  background: #202020;
+  border: 1px solid #777;
+  border-right-color: #111;
+  border-bottom-color: #0a0a0a;
+  border-radius: 0;
+}
+#vm-controls .resolution-controls .select-value {
+  min-height: 24px;
+}
+@container game-viewport (max-height: 560px) {
+  /* After moving fullscreen to the bottom, short landscape windows must allow scrolling to it instead of clipping it outside the viewport. */
+  #vm-controls {
+    max-height: calc(100cqh - var(--safe-top) - var(--safe-bottom) - 20px);
+    overflow-y: auto;
+    pointer-events: auto;
+  }
+  #vm-controls > * {
+    flex-shrink: 0;
+  }
+}
+#vm-touch-controls {
+  background: #191919;
+  border-top-color: #888;
+  box-shadow: 0 -2px 0 #050505;
+}
+#vm-touch-controls .touch-key {
+  border-radius: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .toolbar-button,
+  .rate-button,
+  .folder-button {
+    transition: none;
+  }
+}
+
+/* Postprocessing status occupies its own next row, preserving the full effects dropdown in narrow control bars. */
+#vm-controls .reshade-controls {
+  flex-wrap: wrap;
+}
+#vm-controls .reshade-controls .game-select {
+  flex: 1;
+  min-width: 0;
+}
+#vm-reshade-status {
+  flex-basis: 100%;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+/* Keep each locale's sidebar width stable while allowing translated content to fit inside it. */
+#vm-controls,
+#vm-controls.collapsed {
+  width: var(--runtime-toolbar-width);
+  min-width: var(--runtime-toolbar-width);
+  max-width: var(--runtime-toolbar-width);
+  overflow-x: hidden;
+}
+:root:lang(en) {
+  --runtime-toolbar-width: 176px;
+}
+
+#vm-controls > * {
+  min-width: 0;
+  max-width: 100%;
+}
+#vm-controls output,
+#vm-controls .brand {
+  overflow-wrap: anywhere;
+}
+:lang(en) #vm-controls .resolution-controls > .label {
+  flex-basis: 64px;
+}
+:lang(en) #vm-controls .toolbar-button {
+  box-sizing: border-box;
+  width: 100%;
+  height: auto;
+  padding: 4px 6px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+:lang(en) #vm-controls .volume-controls {
+  flex-wrap: wrap;
+  justify-content: flex-start;
+}
+:lang(en) #vm-controls .volume-controls > .label {
+  flex-basis: 100%;
+}
+#vm-controls #vm-volume {
+  min-width: 0;
+}
+
+/* Keep mobile overlays ordered: sidebar above touch tray, touch tray above joystick. */
+@container game-viewport (max-height: 600px) {
+  #vm-touch-controls {
+    z-index: 25;
+  }
+  #vm-touch-joystick {
+    z-index: 10;
+  }
+  #vm-controls {
+    z-index: 35;
+  }
+}
+
+/* Portrait phones use a notice instead of a rotated game. Keep the canvas mounted
+   and its layout measurable so orientation changes preserve the running session. */
+.landscape-notice {
+  display: none;
+}
+.landscape-notice-content {
+  width: min(100%, 340px);
+}
+.landscape-notice-icon {
+  width: 96px;
+  height: 96px;
+  margin: 0 auto 28px;
+  border: 1px solid rgba(255, 210, 80, 0.2);
+  border-radius: 24px;
+  background: linear-gradient(145deg, rgba(255, 210, 80, 0.1), rgba(255, 210, 80, 0.02));
+}
+.landscape-notice-icon svg {
+  width: 100%;
+  height: 100%;
+  stroke: currentColor;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.landscape-notice h1 {
+  margin: 0 0 16px;
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+.landscape-notice-description {
+  margin: 0;
+  color: #b5b5b5;
+  font-size: 15px;
+  line-height: 1.8;
+}
+.landscape-notice-hint {
+  margin: 28px 0 0;
+  color: #858585;
+  font-size: 12px;
+  line-height: 1.6;
+  letter-spacing: 0.06em;
+}
+@media (max-width: 860px) and (orientation: portrait) {
+  #root > div > :not(#landscape-notice),
+  .game-select-popup,
+  dialog {
+    visibility: hidden;
+    pointer-events: none;
+  }
+  .landscape-notice {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    padding: 24px;
+    visibility: visible;
+    pointer-events: auto;
+    background: #000;
+    color: var(--ra2-yellow);
+    text-align: center;
+    font-size: 20px;
+  }
+  #landscape-fullscreen-notice,
+  body:has(#screen-frame:fullscreen) #landscape-notice {
+    display: none;
+  }
+  #screen-frame:fullscreen #landscape-fullscreen-notice {
+    display: flex;
+  }
+}

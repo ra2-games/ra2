@@ -1,0 +1,236 @@
+/* Match native skirmish styling: black backgrounds, thin red borders, yellow text, and bright red selection bars, without gray metallic skin. */
+.game-select {
+  flex: 1;
+  min-width: 0;
+}
+.game-select-value {
+  box-sizing: border-box;
+  min-width: 0;
+  appearance: none;
+  width: 100%;
+  min-height: 26px;
+  padding: 3px 26px 3px 4px;
+  position: relative;
+  border: 1px solid #f00;
+  border-radius: 0;
+  background: #080000;
+  color: var(--ra2-button-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: none;
+}
+.game-select-value span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.game-select-value::before {
+  content: "";
+  position: absolute;
+  right: 1px;
+  top: 1px;
+  bottom: 1px;
+  width: 20px;
+  border: 1px solid #b40000;
+  background: radial-gradient(ellipse, #f84600, #9b0800 50%, #290000 85%);
+  box-shadow:
+    inset 1px 1px #ff2b00,
+    inset -1px -1px #520000;
+}
+.game-select-value::after {
+  content: "";
+  position: absolute;
+  right: 6px;
+  top: 9px;
+  border: 6px solid transparent;
+  border-top: 10px solid #ffe657;
+  border-bottom: 0;
+  filter: drop-shadow(0 0 2px #ff9800);
+}
+.game-select-value[aria-expanded="true"]::after {
+  top: 5px;
+  transform: rotate(180deg);
+}
+.game-select-value:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+.game-select-popup {
+  position: fixed;
+  z-index: 1500;
+  background: #080000;
+}
+.game-select-options {
+  box-sizing: border-box;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  scrollbar-width: none;
+  border: 1px solid #f00;
+  padding-right: 20px;
+  background: #080000;
+  color: var(--ra2-button-text);
+}
+.game-select-options::-webkit-scrollbar {
+  display: none;
+}
+.game-select-option {
+  box-sizing: border-box;
+  min-height: 30px;
+  padding: 6px 3px;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  touch-action: pan-y;
+}
+.game-select-option.active {
+  background: #f00;
+  color: var(--ra2-button-text);
+}
+@media (pointer: coarse) {
+  /* Mobile option labels may exceed the narrow sidebar; expose them with horizontal-only touch scrolling. */
+  .game-select-options {
+    overflow-x: auto;
+    overflow-y: auto;
+    touch-action: pan-x;
+  }
+  .game-select-option {
+    width: max-content;
+    min-width: 100%;
+    touch-action: pan-x;
+  }
+}
+.game-scrollbar {
+  position: absolute;
+  right: 1px;
+  top: 1px;
+  bottom: 1px;
+  width: 18px;
+  background: #1c0808;
+  border: 1px solid #b40000;
+  box-sizing: border-box;
+  touch-action: none;
+}
+.game-scroll-arrow {
+  appearance: none;
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 20px;
+  padding: 0;
+  border: 2px solid #b40000;
+  border-radius: 0;
+  background: #410c0c;
+  cursor: pointer;
+}
+.game-scroll-arrow.up {
+  top: 0;
+}
+.game-scroll-arrow.down {
+  bottom: 0;
+}
+.game-scroll-arrow::after {
+  content: "";
+  position: absolute;
+  left: 3px;
+  top: 6px;
+  border: 4px solid transparent;
+  border-top-color: #ffd200;
+}
+.game-scroll-arrow.up::after {
+  transform: rotate(180deg);
+  top: 1px;
+}
+.game-scroll-arrow:active {
+  background: #8c1600;
+}
+.game-scroll-track {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 20px;
+  bottom: 20px;
+}
+.game-scroll-thumb {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 18px;
+  border: 2px solid #b40000;
+  box-sizing: border-box;
+  background: #410c0c;
+  cursor: grab;
+  touch-action: none;
+}
+.game-scroll-thumb:active {
+  cursor: grabbing;
+  background: #741010;
+}
+
+/* Match native game-speed/funds sliders: black tracks and narrow red thumbs, preserving native range-input semantics. */
+#vm-volume {
+  height: 24px;
+  min-width: 0;
+}
+#vm-volume::-webkit-slider-runnable-track {
+  height: 24px;
+  border: 1px solid #f00;
+  background: #080000;
+  border-radius: 0;
+  box-shadow: none;
+}
+#vm-volume::-webkit-slider-thumb {
+  appearance: none;
+  width: 10px;
+  height: 22px;
+  margin-top: 0;
+  border: 1px solid #f00;
+  border-radius: 0;
+  background: linear-gradient(90deg, #400000, #f00 45%, #700000);
+  box-shadow: none;
+}
+#vm-volume:active::-webkit-slider-thumb {
+  background: linear-gradient(90deg, #700000, #ff3600 45%, #a00000);
+}
+#vm-volume::-moz-range-track {
+  height: 22px;
+  border: 1px solid #f00;
+  background: #080000;
+  border-radius: 0;
+  box-shadow: none;
+}
+#vm-volume::-moz-range-thumb {
+  width: 8px;
+  height: 20px;
+  border: 1px solid #f00;
+  border-radius: 0;
+  background: linear-gradient(90deg, #400000, #f00 45%, #700000);
+  box-shadow: none;
+}
+#vm-volume-value {
+  height: 24px;
+  background: #130000;
+  color: var(--ra2-button-text);
+  -webkit-text-fill-color: var(--ra2-button-text);
+  opacity: 1;
+  border: 1px solid #f00;
+  border-radius: 0;
+}
+.quick-start-dialog {
+  width: min(480px, calc(100vw - 32px));
+  box-sizing: border-box;
+  background: #100000;
+  color: #ff0;
+  border: 1px solid #f00;
+  padding: 20px;
+}
+.quick-start-dialog p {
+  text-align: left;
+  line-height: 1.6;
+}
+.quick-start-dialog button {
+  margin: 8px 8px 0 0;
+}

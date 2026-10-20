@@ -1,0 +1,1582 @@
+/* First screen presentation: the RA2 main-menu theme from components/ra2menu/ra2menu.css covers the whole viewport.
+   This file keeps the .game-home stage integration and the picker's interior content, checklist, and network styling. */
+.game-home #stage {
+  background: #0d0d0d;
+}
+.game-home #screen-frame {
+  visibility: hidden;
+}
+.game-home #vm-controls {
+  display: none;
+}
+.source-home-contact {
+  position: absolute;
+  left: 5px;
+  bottom: 5px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 606px;
+  height: 23px;
+  color: #d4b574;
+  font:
+    600 12px / 1.3 Arial,
+    "Microsoft YaHei",
+    "Microsoft JhengHei",
+    sans-serif;
+  user-select: text;
+}
+.source-home-contact a {
+  color: inherit;
+  text-decoration: none;
+}
+.source-home-contact a:hover {
+  color: #ead6a0;
+  text-decoration: underline;
+}
+#root .source-home-contact a:focus-visible {
+  outline: 1px solid #a6ada3;
+  outline-offset: 2px;
+}
+@media (max-width: 560px) {
+  .source-home-contact {
+    position: static;
+    width: auto;
+    height: auto;
+    min-height: 32px;
+    margin-top: 12px;
+    font-size: 12px;
+  }
+}
+/* Hide the home screen's scrollbar while keeping short viewports scrollable. */
+.game-home .ra2-screen {
+  scrollbar-width: none;
+}
+.game-home .ra2-screen::-webkit-scrollbar {
+  display: none;
+}
+/* The menu screen replaces the inner-screen overlay and owns its scrolling; #ui stays a pass-through layer. */
+.game-home #ui {
+  position: fixed;
+  inset: 0;
+  transform: none;
+  width: auto;
+  height: auto;
+  overflow: visible;
+}
+.game-home #ui > .game-source-picker {
+  position: absolute;
+  inset: 0;
+  width: auto;
+  height: auto;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  background: none;
+  border: 0;
+  box-shadow: none;
+}
+/* The briefing uses restrained amber headings and neutral body copy on an opaque terminal insert. */
+.game-source-picker [hidden] {
+  display: none !important;
+}
+.ra2-content h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 3px;
+  padding: 8px 0;
+  border: 0;
+  border-bottom: 1px solid #7b81774d;
+  background:
+    repeating-linear-gradient(0deg, #ffffff03 0 1px, transparent 1px 3px),
+    linear-gradient(100deg, #2a3033, #1b2125 58%, #303638);
+  color: #dfcb8d;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-align: left;
+  text-shadow: 0 1px #000;
+}
+.ra2-content h3::before {
+  content: "";
+  width: 4px;
+  height: 4px;
+  flex: 0 0 auto;
+  background: #b9a568;
+  box-shadow: 0 0 4px #b9a56840;
+}
+@media (min-width: 561px) {
+  .ra2-content h3 {
+    margin: -12px -16px 3px;
+    padding-inline: 16px;
+  }
+}
+:is(.game-source-picker, .source-settings-dialog) p.source-picker-description {
+  margin: 2px 0 0;
+  padding: 7px 9px;
+  border-left: 2px solid #676e68;
+  background: #070a0c7a;
+  color: #a6a79f;
+  font-weight: 400;
+  font-size: 11px;
+  text-align: left;
+  line-height: 1.5;
+}
+.game-guide h4 {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.game-guide ul {
+  margin: 0;
+  padding: 3px 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  counter-reset: briefing-step;
+}
+.game-guide li {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding-left: 8px;
+  border-left: 1px solid #747d6b33;
+  color: #cbc8b8;
+  font-size: 11.5px;
+  line-height: 1.4;
+  text-align: left;
+  counter-increment: briefing-step;
+}
+.game-guide li::before {
+  content: counter(briefing-step, decimal-leading-zero);
+  flex: 0 0 auto;
+  color: #aa996d;
+  font:
+    11px / 1 "Courier New",
+    monospace;
+}
+@media (max-width: 560px) {
+  .game-guide ul {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .game-guide li {
+    flex-direction: row;
+    align-items: baseline;
+    gap: 8px;
+    padding-left: 0;
+    border-left: 0;
+  }
+}
+/* Multiplayer row: LED toggle plus a muted hint so the section reads like a settings line, not a bare switch. */
+.network-toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding-top: 8px;
+  border-top: 1px solid #77776933;
+}
+.network-toggle-hint {
+  color: #92978f;
+  font-size: 11px;
+  text-shadow: 1px 1px #000;
+}
+.relay-tech-note {
+  color: #a9a493;
+}
+:is(.game-source-picker, .source-settings-dialog) p.source-picker-error {
+  margin: 0;
+  color: #ff9292;
+  font-weight: 400;
+  font-size: 13px;
+  text-align: left;
+  line-height: 1.5;
+}
+.manifest-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow: visible;
+}
+.manifest-line {
+  color: #ff9292;
+  font-size: 12px;
+  line-height: 1.4;
+  text-shadow: 1px 1px #000;
+}
+.manifest-line.ok {
+  color: #ff0;
+}
+.manifest-line.optional {
+  color: #ded59a;
+}
+/* Multiplayer toggle: a text line in the interior whose LED lights up in the site's hover-glow orange when enabled. */
+.network-toggle {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  color: #d1bb7a;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-shadow: 1px 1px #000;
+}
+.network-toggle input {
+  position: absolute;
+  left: 0;
+  top: 4px;
+  width: 12px;
+  height: 12px;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.network-toggle:focus-within {
+  outline: none;
+}
+.network-toggle:focus-within .network-toggle-led {
+  border-color: #b0b6a9;
+  box-shadow: 0 0 0 1px #626b65;
+}
+.network-toggle-led {
+  box-sizing: border-box;
+  width: 12px;
+  height: 12px;
+  flex: 0 0 auto;
+  border: 1px solid #757b79;
+  border-radius: 1px;
+  background: #303536;
+  box-shadow: 0 0 2px #000 inset;
+}
+.network-toggle input:checked + .network-toggle-led {
+  border-color: #ffd879;
+  background: #ffa500;
+  box-shadow: 0 0 6px #ffa500;
+}
+.network-settings {
+  padding: 10px 12px;
+  border: 2px inset #888;
+  background: rgba(0, 0, 0, 0.45);
+}
+.relay-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: #ff0;
+  font-size: 12px;
+}
+.relay-settings input {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: 6px 8px;
+  color: #ff0;
+  background: #1a1a1a;
+  border: 2px inset #aaa;
+  border-radius: 0;
+  font: inherit;
+}
+.relay-settings input::placeholder {
+  color: #969081;
+}
+.relay-settings input[aria-invalid="true"] {
+  border-color: #ff9090;
+}
+.relay-settings input:focus-visible {
+  outline: 2px solid #dbc36a;
+  outline-offset: 3px;
+}
+.relay-settings small {
+  color: #ded59a;
+  line-height: 1.5;
+}
+.relay-settings [role="alert"] {
+  margin: 0;
+  color: #ff9090;
+}
+/* Touch targets and supporting copy follow the shared narrow-screen panel. */
+@media (max-width: 560px) {
+  .ra2-footer {
+    padding: 0;
+    font-size: 12px;
+    line-height: 1.6;
+  }
+  .network-toggle {
+    min-height: 44px;
+  }
+  .relay-settings input {
+    min-height: 44px;
+    font-size: 16px;
+  }
+}
+
+/* Resource guidance lives in a native modal so the tactical display remains unobstructed. */
+.source-home-title {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+.source-home-hint {
+  position: absolute;
+  left: 36px;
+  right: 230px;
+  bottom: 40px;
+}
+.source-settings-dialog {
+  width: min(520px, calc(100vw - 32px));
+  max-width: none;
+  max-height: calc(100dvh - var(--safe-top) - var(--safe-bottom) - 32px);
+  overflow: hidden;
+  box-sizing: border-box;
+  padding: 0;
+  border: 3px solid transparent;
+  border-radius: 2px;
+  color: #c7bea6;
+  background:
+    linear-gradient(#111315, #080a0c) padding-box,
+    radial-gradient(ellipse at 12% 0%, #e0e3d985, transparent 36%) border-box,
+    linear-gradient(180deg, #c2c8bf70, transparent 3% 95%, #05090d8c 97%, #a8b29d44 99%, #070d12b0) border-box,
+    linear-gradient(125deg, #a7ada6, #525956 16%, #232a2d 48%, #838c81 86%, #343b3e) border-box;
+  box-shadow:
+    0 0 0 1px #05080b,
+    0 12px 36px #000a,
+    inset 1px 1px #e2e5d92c,
+    inset -1px -1px #020609c4;
+}
+.source-settings-dialog[open] {
+  display: flex;
+  flex-direction: column;
+}
+.source-settings-dialog::backdrop {
+  background: #0009;
+}
+.source-settings-header {
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-bottom: 1px solid #7a45304d;
+  background:
+    radial-gradient(ellipse 130px 28px at 22% 0%, #d1643e5c, transparent 85%),
+    linear-gradient(90deg, #08030124, transparent 20% 60%, #06020170),
+    linear-gradient(180deg, #731b0e, #41100a 28%, #250b08 67%, #140806);
+  box-shadow:
+    inset 0 1px #ffc09a47,
+    inset 0 -1px #070303d9,
+    0 1px #9b654226;
+}
+.source-settings-header h2 {
+  margin: 0;
+  color: #ddc47f;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-shadow: 0 1px #090402;
+}
+.source-settings-close {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
+  padding: 0;
+  border: 1px solid;
+  border-color: #b0b6a9 #303838 #141b1d #818b7e;
+  border-radius: 1px;
+  color: #d7c38d;
+  background: radial-gradient(ellipse at 30% 12%, #be3d2066, transparent 70%), linear-gradient(#70190d, #290a06);
+  box-shadow:
+    inset 0 1px #ffc19b38,
+    inset 0 -1px #070201,
+    0 1px 2px #0009;
+  cursor: pointer;
+  font:
+    22px / 1 Arial,
+    sans-serif;
+}
+.source-settings-close:hover {
+  background: linear-gradient(#851e11, #42100a);
+}
+.source-settings-close:active {
+  box-shadow: inset 0 2px 4px #000b;
+}
+#root .source-settings-close:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 1px #b0b6a9;
+}
+.source-settings-dialog .ra2-content {
+  flex: 0 1 auto;
+  overflow-y: auto;
+  position: static;
+  min-height: 0;
+  width: auto;
+  margin: 0;
+  padding: 18px;
+  gap: 12px;
+  border: 0;
+  background:
+    radial-gradient(ellipse at 5% 5%, #37393124, transparent 62%),
+    linear-gradient(145deg, #111314, #050709 76%, #0e1011);
+  box-shadow:
+    inset 0 3px 8px #000a,
+    inset 1px 0 #b4bcb014,
+    inset -1px -1px #0007;
+}
+.source-settings-dialog .game-guide ul {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 0 0 12px;
+  border-bottom: 1px solid #020406b0;
+  box-shadow: 0 1px #bbc3b31c;
+}
+.source-settings-dialog .game-guide li {
+  flex-direction: row;
+  align-items: baseline;
+  gap: 12px;
+  padding: 0;
+  border: 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: #d0c9b5;
+}
+.source-settings-dialog .game-guide li::before {
+  color: #aa8f57;
+  font-size: 12px;
+}
+.source-settings-dialog p.source-picker-description {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: 12px;
+  line-height: 1.65;
+  color: #969b94;
+}
+.source-settings-dialog .network-toggle-row {
+  padding-top: 8px;
+  border-top-color: #020406bf;
+  box-shadow: inset 0 1px #a4b09c1a;
+}
+.source-settings-dialog .network-toggle {
+  font-size: 14px;
+  min-height: 32px;
+  color: #d1b56f;
+}
+.source-settings-dialog .network-toggle-hint {
+  font-size: 12px;
+  color: #969b94;
+}
+.source-settings-dialog .relay-settings {
+  color: #d7c38d;
+  font-size: 13px;
+}
+.source-settings-dialog .relay-settings input {
+  min-height: 36px;
+  color: #dfd4ad;
+  border: 1px solid;
+  border-color: #1e262b #4c5553 #69716a #283137;
+  background: linear-gradient(#05080b, #111417);
+  box-shadow:
+    inset 0 2px 5px #000c,
+    inset 0 -1px #a8b39b10;
+}
+.source-settings-dialog .relay-settings small {
+  color: #a3a699;
+  font-size: 12px;
+}
+.source-settings-dialog .network-settings {
+  border: 1px solid #3d4448;
+  background: #080c10;
+}
+@media (max-width: 560px) {
+  .source-home-hint {
+    position: static;
+    margin-top: 10px;
+  }
+  .source-settings-header {
+    padding: 8px 12px;
+  }
+  .source-settings-header h2 {
+    font-size: 15px;
+  }
+  .source-settings-dialog .ra2-content {
+    padding: 14px;
+    gap: 12px;
+  }
+  .source-settings-close {
+    width: 44px;
+    height: 44px;
+  }
+  .source-settings-dialog .relay-settings input {
+    min-height: 44px;
+    font-size: 16px;
+  }
+}
+@media (max-height: 560px) and (min-width: 561px) {
+  .source-settings-dialog {
+    width: min(700px, calc(100vw - 32px));
+  }
+  .source-settings-dialog .ra2-content {
+    padding: 12px 18px;
+    gap: 8px;
+  }
+  .source-settings-header {
+    padding-block: 7px;
+  }
+  .source-settings-dialog .game-guide ul {
+    gap: 5px;
+    padding-bottom: 8px;
+  }
+  .source-settings-dialog .game-guide li {
+    font-size: 12px;
+    line-height: 1.4;
+  }
+  .source-settings-dialog .network-toggle {
+    min-height: 26px;
+  }
+  .source-settings-dialog .network-settings {
+    padding: 6px 10px;
+  }
+}
+
+.source-settings-dialog [hidden] {
+  display: none !important;
+}
+
+.game-guide-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+.game-guide-actions .dialog-button {
+  min-height: 36px;
+  padding: 8px 12px;
+  border: 1px solid;
+  border-color: #a5aca2 #303838 #141b1d #818b7e;
+  color: #d7c38d;
+  background: linear-gradient(#70190d, #290a06);
+  cursor: pointer;
+}
+.game-guide-actions .dialog-button:hover {
+  background: linear-gradient(#851e11, #42100a);
+}
+.game-guide-actions .dialog-button:active {
+  box-shadow: inset 0 2px 4px #000b;
+}
+.game-guide-actions .dialog-button:focus-visible {
+  outline: 2px solid #dcc788;
+  outline-offset: 3px;
+}
+
+/* Version selection and preparation share one dialog; the launch action stays visible while content scrolls. */
+.source-settings-dialog.resource-upload-dialog {
+  width: min(680px, calc(100vw - 32px));
+}
+.resource-upload-dialog .ra2-content {
+  gap: 20px;
+  padding: 20px;
+  text-align: left;
+}
+.resource-upload-dialog p {
+  margin: 6px 0;
+  color: #b8b7aa;
+  font-size: 13px;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+.resource-upload-dialog small {
+  font-size: 12px;
+  color: #969e94;
+  line-height: 1.6;
+}
+.resource-upload-dialog h3 {
+  margin: 0 0 12px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #e6cf8b;
+  font-size: 14px;
+  letter-spacing: 0;
+}
+.resource-upload-dialog h3::before {
+  display: none;
+}
+.upload-edition-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+.upload-game-status {
+  min-width: 0;
+  padding: 6px 10px;
+  border: 1px solid #424945;
+  background: linear-gradient(145deg, #292d2d66, #080b0d);
+  box-shadow: inset 0 1px #ffffff08;
+}
+.upload-game-status[data-selected="true"] {
+  border-color: #bca064;
+  background: radial-gradient(ellipse at 50% 0%, #98402c44, transparent 90%), #17100d;
+  box-shadow: inset 0 1px #f4d48b24;
+}
+.upload-game-status:focus-within {
+  outline: 2px solid #e5cd8c;
+  outline-offset: 3px;
+}
+.upload-edition-option {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  box-sizing: border-box;
+  text-align: center;
+  cursor: pointer;
+}
+.upload-edition-option:has(input:disabled) {
+  cursor: default;
+}
+/* Keep native radio keyboard behavior while the card provides the selection appearance. */
+.upload-edition-option input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: inherit;
+}
+.upload-edition-mark {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  margin-top: 0;
+  color: #c0aa79;
+  font:
+    bold 17px / 1 Georgia,
+    serif;
+}
+.upload-edition-mark img {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+}
+.upload-edition-option strong {
+  color: #e1d1a3;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.upload-missing-files {
+  padding: 0 4px;
+  color: #a3a699;
+  font-size: 12px;
+}
+.upload-missing-files summary {
+  cursor: pointer;
+}
+.upload-preparation-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: 14px;
+}
+.upload-resource-item {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid #454a4466;
+  background: #15191a66;
+}
+.upload-resource-item > small {
+  display: block;
+  margin-top: 12px;
+}
+.upload-resource-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+.upload-resource-actions button,
+.upload-launch-button {
+  min-height: 40px;
+  padding: 8px 14px;
+  border: 1px solid;
+  border-color: #9a8260 #45362b #30241e #7c6a50;
+  color: #e6cf8b;
+  background: linear-gradient(#541b12, #260d09);
+  box-shadow: inset 0 1px #e7c3801a;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.upload-resource-actions button:hover,
+.upload-launch-button:hover {
+  color: #ffe3a4;
+  background: linear-gradient(#752e16, #3d140b);
+}
+.upload-resource-actions button:focus-visible,
+.upload-launch-button:focus-visible {
+  outline: 2px solid #dcc788;
+  outline-offset: 3px;
+}
+.upload-resource-actions button:disabled,
+.upload-launch-button:disabled {
+  color: #8e8e88;
+  border-color: #515151;
+  background: #242424;
+  box-shadow: none;
+  cursor: default;
+}
+.resource-upload-dialog [role="alert"] {
+  padding: 10px 12px;
+  border-left: 2px solid #b15f50;
+  background: #6a241922;
+  color: #ffaaa0;
+}
+.resource-upload-dialog .upload-resource-item h3 {
+  flex-wrap: wrap;
+}
+.upload-mod-badge {
+  display: inline-block;
+  margin-bottom: 6px;
+  padding: 2px 7px;
+  border: 1px solid #816b444d;
+  color: #bda87b;
+  font-size: 11px;
+}
+.upload-package-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+}
+.upload-package {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 0;
+  border-bottom: 1px solid #454a4466;
+}
+.upload-package > div:first-child {
+  min-width: 0;
+}
+.upload-package .upload-resource-actions {
+  flex: 0 0 auto;
+  margin: 0;
+}
+.upload-package strong {
+  font-size: 12px;
+  color: #d7c38d;
+}
+.resource-upload-dialog .upload-package p {
+  margin: 3px 0 0;
+  font-size: 12px;
+  color: #969e94;
+}
+.upload-resource-link {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 2px;
+  color: #b6a478;
+  background: transparent;
+  text-decoration: none;
+  vertical-align: middle;
+}
+.upload-resource-link:hover {
+  color: #ffe3a4;
+  background: #d8b46a12;
+}
+.upload-resource-link:active {
+  color: #e1cb95;
+  background: #d8b46a1f;
+}
+.upload-resource-link svg {
+  display: block;
+}
+.upload-resource-link:focus-visible {
+  outline: 2px solid #dcc788;
+  outline-offset: 3px;
+}
+.resource-upload-dialog .upload-package p.upload-resource-ready,
+.resource-upload-dialog .upload-resource-ready,
+.upload-resource-ready {
+  color: #c6d69b;
+}
+.upload-import-progress {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  padding: 14px 16px;
+  border: 1px solid #555b4d;
+  border-left: 2px solid #b88e50;
+  border-radius: 2px;
+  background: linear-gradient(125deg, #29271d80, #101516 70%);
+  box-shadow: inset 0 1px #e4d9b50d;
+}
+.upload-progress-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  color: #e1cb95;
+  font-size: 13px;
+}
+.upload-progress-percent {
+  color: #edbb6b;
+  font: 600 15px / 1.2 monospace;
+  font-variant-numeric: tabular-nums;
+}
+.resource-upload-dialog .upload-import-progress p {
+  margin: 0;
+  color: #aeb4a7;
+  font-size: 12px;
+}
+/* The shared track is anchored to the home artwork by default; modal progress stays in document flow. */
+.resource-upload-dialog .upload-import-progress .ra2-progress-frame {
+  position: relative;
+  inset: auto;
+  width: 100%;
+  height: 32px;
+  margin: 0;
+  padding: 4px;
+  border: 1px solid #586153;
+  border-radius: 2px;
+  background: #0b0f10;
+  box-shadow: inset 0 1px 4px #000a;
+}
+.resource-upload-dialog .upload-import-progress .ra2-progress-track {
+  background: #141a19;
+  box-shadow: inset 0 1px 3px #000a;
+}
+.resource-upload-dialog .upload-import-progress .ra2-progress-fill {
+  background: linear-gradient(90deg, #761d13, #b24b24 65%, #d09a4b);
+  box-shadow:
+    inset 0 1px #f4cc7e66,
+    inset 0 -1px #210e0980;
+}
+.resource-upload-dialog .upload-import-progress .ra2-progress-label {
+  padding-inline: 8px;
+  color: #f4e4bc;
+  font-size: 11px;
+  line-height: 22px;
+  text-shadow:
+    0 1px 2px #000,
+    0 0 4px #000;
+}
+.resource-upload-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 12px 20px;
+  border-top: 1px solid #6d735c55;
+  background: linear-gradient(#202322, #111315);
+  box-shadow: inset 0 1px #e4dec509;
+}
+.upload-launch-summary {
+  flex: 1 1 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.upload-launch-summary strong {
+  color: #e1d1a3;
+  font-size: 14px;
+}
+.upload-launch-actions {
+  flex: 0 0 auto;
+  flex-wrap: nowrap;
+  gap: 8px;
+  margin: 0 0 0 auto;
+}
+.upload-launch-actions button {
+  min-height: 44px;
+}
+.upload-launch-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  flex: 0 0 auto;
+  min-width: 150px;
+  min-height: 44px;
+  font-size: 15px;
+}
+@media (max-width: 640px) {
+  .upload-preparation-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .resource-upload-dialog .ra2-content {
+    padding: 14px;
+    gap: 16px;
+  }
+  .upload-edition-grid {
+    gap: 6px;
+  }
+  .upload-game-status {
+    padding: 8px;
+  }
+  .upload-edition-option strong {
+    font-size: 12px;
+  }
+  .resource-upload-footer {
+    padding: 12px 14px;
+    gap: 10px;
+  }
+  .upload-launch-button {
+    min-width: 120px;
+    gap: 12px;
+  }
+}
+
+.upload-game-status:hover:not(:has(input:disabled)) {
+  border-color: #9e895e;
+}
+.upload-resource-item[data-ready="true"] .upload-resource-actions button:not(:disabled) {
+  background: #202526;
+  border-color: #525a54;
+  color: #c2bcaa;
+}
+.upload-resource-item[data-ready="true"] .upload-resource-actions button:hover:not(:disabled) {
+  background: #303735;
+  color: #ffe3a4;
+}
+@media (max-height: 560px) {
+  .resource-upload-dialog .ra2-content {
+    padding: 10px 16px;
+    gap: 10px;
+  }
+  .resource-upload-dialog h3 {
+    margin-bottom: 8px;
+  }
+  .upload-resource-item {
+    padding: 12px;
+  }
+  .upload-edition-option {
+    min-height: 44px;
+    flex-direction: row;
+    gap: 8px;
+  }
+  .upload-edition-mark {
+    font-size: 14px;
+    width: 28px;
+    height: 28px;
+  }
+  .upload-edition-mark img {
+    width: 28px;
+    height: 28px;
+  }
+  .upload-edition-option strong {
+    font-size: 12px;
+  }
+  .upload-game-status {
+    padding: 6px 10px;
+  }
+  .resource-upload-footer {
+    padding: 8px 16px;
+    gap: 6px 12px;
+  }
+}
+
+.resource-links-dialog .source-settings-header {
+  display: grid;
+  grid-template-columns: minmax(30px, 1fr) auto minmax(30px, 1fr);
+}
+.resource-links-dialog .source-settings-header h2 {
+  grid-column: 2;
+  text-align: center;
+}
+.resource-links-dialog .source-settings-close {
+  grid-column: 3;
+  justify-self: end;
+}
+.resource-links-dialog .ra2-content {
+  text-align: center;
+  gap: 16px;
+}
+.resource-link-card {
+  padding: 18px 16px;
+  border: 1px solid #454a44;
+  background: linear-gradient(145deg, #25282042, #080b0d80);
+}
+.resource-links-dialog .resource-link-card h3 {
+  display: block;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  text-align: center;
+  color: #e6cf8b;
+  font-size: 15px;
+  letter-spacing: 0.04em;
+}
+.resource-links-dialog .resource-link-card h3::before {
+  display: none;
+}
+.resource-links-dialog p {
+  margin: 10px 0 16px;
+  color: #b5b2a5;
+  font-size: 13px;
+  line-height: 1.7;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+.resource-download-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+.resource-download-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-height: 42px;
+  max-width: 100%;
+  padding: 10px 16px;
+  border: 1px solid;
+  border-color: #9a8260 #45362b #30241e #7c6a50;
+  color: #e6cf8b;
+  background: linear-gradient(#541b12, #260d09);
+  box-shadow: inset 0 1px #e7c3801a;
+  text-align: center;
+  text-decoration: none;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.resource-download-link:hover {
+  color: #ffe3a4;
+  background: linear-gradient(#752e16, #3d140b);
+}
+.resource-download-link:focus-visible {
+  outline: 2px solid #dcc788;
+  outline-offset: 3px;
+}
+@media (max-width: 560px) {
+  .resource-links-dialog .source-settings-header {
+    grid-template-columns: minmax(44px, 1fr) auto minmax(44px, 1fr);
+  }
+}
+
+/* Shared command-console finish for the home dialogs and their live controls. */
+.source-settings-dialog {
+  border-radius: 0;
+  border-width: 1px;
+  box-shadow:
+    0 0 0 1px #090909,
+    0 0 0 2px #ffffff0a,
+    0 18px 48px #000c;
+}
+.source-settings-header {
+  background: linear-gradient(110deg, #441713, #191b1d);
+  border-bottom: 1px solid #81633e;
+}
+.source-settings-header h2 {
+  color: #ffe27c;
+  font-weight: 700;
+  text-shadow: 1px 2px #240700;
+  letter-spacing: 0.08em;
+}
+.source-settings-dialog .ra2-content {
+  background: repeating-linear-gradient(0deg, #ffffff02 0 1px, transparent 1px 4px), #0c1010;
+}
+/* Keep geometry stable when file pickers temporarily disable commands. */
+.source-settings-dialog
+:is(.dialog-button, .upload-resource-actions button, .upload-launch-button, .resource-download-link) {
+  border-width: 2px;
+  font-weight: 600;
+}
+.source-settings-dialog
+  :is(.dialog-button, .upload-resource-actions button, .upload-launch-button, .resource-download-link):not(:disabled) {
+  border: 2px solid;
+  border-color: #aa9a6b #3b3024 #211b15 #887853;
+  border-radius: 0;
+  color: #ffe471;
+  background: radial-gradient(ellipse at 50% 30%, #b52212, #6b1008 60%, #2d0704);
+  box-shadow:
+    inset 0 0 0 2px #240705,
+    inset 0 3px #ea69434d,
+    0 2px 2px #0008;
+  text-shadow: 1px 1px #210601;
+  font-weight: 600;
+}
+.source-settings-dialog
+  :is(.dialog-button, .upload-resource-actions button, .upload-launch-button, .resource-download-link):hover:not(
+    :disabled
+  ) {
+  background: radial-gradient(ellipse at 50% 30%, #ce6c1b, #90300b 65%, #471005);
+  color: #fff2a4;
+}
+.source-settings-dialog
+  :is(.dialog-button, .upload-resource-actions button, .upload-launch-button, .resource-download-link):active:not(
+    :disabled
+  ) {
+  box-shadow: inset 0 2px 6px #000b;
+}
+.upload-game-status {
+  border-width: 1px;
+  border-radius: 4px;
+  border-color: #44494a;
+  background: #191d1e;
+}
+.upload-game-status[data-selected="true"] {
+  border-color: #c9a15b;
+  background: #38231c;
+  box-shadow: inset 0 0 0 1px #ec9d3c44;
+}
+.upload-resource-item,
+.resource-link-card {
+  border: 2px solid;
+  border-color: #353d32 #666b57 #73745d #292f28;
+  background: linear-gradient(140deg, #1c2420, #0b100d);
+  box-shadow: inset 0 2px 5px #0009;
+}
+.resource-upload-footer,
+.game-guide-actions {
+  border-top: 2px solid #756646;
+  background: linear-gradient(#35382e, #141a15);
+}
+.source-settings-dialog.game-guide-dialog {
+  width: min(700px, calc(100vw - 32px));
+}
+.game-guide-dialog .get-game-disclaimer {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 10px 16px;
+  color: #eee5ce;
+  background: #180b07;
+  border-bottom: 1px solid #7f5429;
+  font:
+    12px / 1.5 Arial,
+    sans-serif;
+  text-align: center;
+}
+.resource-links-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.resource-links-grid .resource-link-card {
+  padding: 14px 12px;
+}
+.game-guide-dialog .get-game-ownership {
+  margin: 0;
+  color: #c8c3a6;
+  font-size: 12px;
+}
+.game-guide-dialog .game-guide-actions {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 12px 16px;
+}
+@media (max-width: 560px) {
+  .resource-links-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-height: 560px) {
+  .game-guide-dialog .get-game-disclaimer {
+    padding: 6px 12px;
+  }
+  .game-guide-dialog .game-guide-actions {
+    padding: 6px 12px;
+  }
+}
+
+.resource-upload-dialog .upload-resource-item {
+  border: 1px solid #3c4140;
+  border-radius: 4px;
+  background: #15191a;
+  box-shadow: none;
+}
+.resource-upload-footer {
+  border-top: 1px solid #484638;
+  background: #191c1c;
+}
+
+/* The resource workflow shares the home console's machined frame and red command switches. */
+.source-settings-dialog.resource-upload-dialog {
+  width: min(760px, calc(100vw - 32px));
+  border: 6px solid transparent;
+  border-radius: 0;
+  background:
+    linear-gradient(#151716, #0a0c0b) padding-box,
+    linear-gradient(130deg, #e0e0d6, #777c77 12%, #303634 40%, #a5aaa1 75%, #434942) border-box;
+  color: #d0c9ac;
+  box-shadow:
+    0 0 0 1px #050705,
+    0 0 0 3px #5e635a,
+    0 22px 70px #000d;
+  font-family: Tahoma, Arial, "Microsoft YaHei", sans-serif;
+}
+.resource-upload-dialog .source-settings-header {
+  padding: 10px 18px;
+  border-bottom: 3px solid #161b18;
+  background:
+    repeating-linear-gradient(0deg, #ffffff05 0 1px, transparent 1px 3px),
+    linear-gradient(110deg, #9a9f96, #535b55 28%, #343c38 65%, #7f867b);
+  box-shadow:
+    inset 0 1px #eff2e380,
+    inset 0 -1px #a4aa9260;
+}
+.resource-upload-dialog .source-settings-header h2 {
+  min-width: 180px;
+  margin: 0;
+  padding: 7px 22px;
+  border: 2px solid;
+  border-color: #292923 #a6a58c #a6a58c #292923;
+  color: #ffe37d;
+  background: radial-gradient(ellipse at 50% 20%, #8f2617, #310805);
+  box-shadow: inset 0 0 0 2px #180503;
+  font-size: 18px;
+  text-align: center;
+  letter-spacing: 0.08em;
+  text-shadow: 1px 2px #180300;
+}
+.resource-upload-dialog .source-settings-close {
+  width: 30px;
+  height: 30px;
+  border: 2px solid;
+  border-color: #c1b388 #3f3526 #282116 #9d906b;
+  border-radius: 0;
+  background: linear-gradient(#792315, #340b06);
+  box-shadow: inset 0 0 0 1px #240704;
+  color: #ffe391;
+}
+.resource-upload-dialog .source-settings-close:hover:not(:disabled) {
+  background: #a54a1b;
+}
+.resource-upload-dialog .ra2-content {
+  gap: 16px;
+  padding: 16px 20px;
+  border: 1px solid #040604;
+  background: repeating-linear-gradient(0deg, #ffffff02 0 1px, transparent 1px 4px), #101310;
+  box-shadow: inset 0 0 16px #0008;
+}
+.resource-upload-dialog h3 {
+  color: #ebd38b;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.resource-upload-dialog p {
+  color: #b8b8a5;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.resource-upload-dialog small {
+  color: #929782;
+  font-size: 11px;
+  line-height: 1.45;
+}
+.resource-upload-dialog .upload-edition-grid {
+  gap: 6px;
+  padding: 5px;
+  border: 2px solid;
+  border-color: #292f29 #878b7c #878b7c #292f29;
+  background: linear-gradient(#5b6459, #313a30);
+  box-shadow: inset 0 2px 4px #0008;
+}
+.resource-upload-dialog .upload-game-status {
+  padding: 0 8px;
+  border: 2px solid;
+  border-color: #171c15 #83866c #83866c #171c15;
+  border-radius: 0;
+  background: #141a12;
+  box-shadow: inset 0 0 0 1px #030603;
+}
+.resource-upload-dialog .upload-game-status[data-selected="true"] {
+  border-color: #efcc73 #836133 #654723 #d8b65e;
+  background: radial-gradient(ellipse at 50% 20%, #8b2917, #370c06);
+  box-shadow: inset 0 0 0 2px #260704;
+}
+.resource-upload-dialog .upload-game-status:hover:not(:has(input:disabled)) {
+  background: #4e2810;
+}
+.resource-upload-dialog .upload-game-status:has(input:focus-visible) {
+  outline: 2px solid #ffe7a2;
+  outline-offset: 2px;
+}
+.resource-upload-dialog .upload-game-status:focus-within:not(:has(input:focus-visible)) {
+  outline: none;
+}
+.resource-upload-dialog .upload-edition-option strong {
+  color: #bcbf9d;
+  font-size: 13px;
+}
+.resource-upload-dialog .upload-game-status[data-selected="true"] strong {
+  color: #ffe18b;
+  text-shadow: 1px 1px #200400;
+}
+.resource-upload-dialog .upload-edition-mark {
+  flex: 0 0 30px;
+  width: 30px;
+  height: 30px;
+}
+.resource-upload-dialog .upload-edition-mark img {
+  width: 28px;
+  height: 28px;
+}
+.resource-upload-dialog .upload-workflow {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  align-items: stretch;
+  padding-left: 44px;
+}
+.resource-upload-dialog .upload-workflow::before {
+  content: "";
+  position: absolute;
+  top: 22px;
+  bottom: 22px;
+  left: 15px;
+  width: 2px;
+  background: #b79d54;
+  box-shadow:
+    1px 0 #080b06,
+    -1px 0 #b79d5420;
+}
+.resource-upload-dialog .upload-workflow-node {
+  position: relative;
+  min-width: 0;
+  padding: 12px 14px;
+  margin: 0;
+  border: 2px solid;
+  border-color: #798071 #30382c #252c21 #676f5e;
+  border-radius: 0;
+  background: linear-gradient(110deg, #1c241a, #0c120c);
+  box-shadow:
+    inset 0 0 0 2px #080d07,
+    0 2px 3px #0008;
+}
+.resource-upload-dialog .upload-workflow-node::before {
+  content: attr(data-step);
+  position: absolute;
+  left: -44px;
+  top: 12px;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  box-sizing: border-box;
+  border: 2px solid;
+  border-color: #b4b497 #404732 #303626 #989d7c;
+  color: #f0d77c;
+  background: linear-gradient(#444d35, #1c2515);
+  box-shadow: 0 0 0 3px #101310;
+  font:
+    bold 12px / 1 "Courier New",
+    monospace;
+}
+.resource-upload-dialog .upload-workflow-node::after {
+  content: "";
+  position: absolute;
+  left: -34px;
+  top: -12px;
+  border-top: 7px solid #d8bb65;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+}
+.resource-upload-dialog .upload-workflow > .upload-workflow-node:first-child::after {
+  display: none;
+}
+.resource-upload-dialog .upload-workflow-node[data-ready="true"]::before {
+  color: #d8f39a;
+  border-color: #a9be77 #536437 #394925 #a0b76b;
+  background: #34451e;
+}
+.resource-upload-dialog .upload-workflow-node[data-optional="true"] {
+  border-style: dashed;
+  border-color: #7b7657;
+  background: #151a12;
+  box-shadow: none;
+}
+.resource-upload-dialog .upload-workflow-mod {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.resource-upload-dialog .upload-package {
+  gap: 14px;
+  align-items: center;
+}
+.resource-upload-dialog .upload-package-heading {
+  gap: 4px 12px;
+}
+.resource-upload-dialog .upload-package strong {
+  color: #ecd58e;
+  font-size: 13px;
+  font-weight: 700;
+}
+.resource-upload-dialog .upload-package p {
+  color: #a7ae94;
+  font-size: 11px;
+}
+.resource-upload-dialog .upload-resource-item > small {
+  margin-top: 6px;
+}
+.resource-upload-dialog .upload-workflow-finish {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-color: #b69a59 #5a4c2c #45391f #99844c;
+  background: linear-gradient(110deg, #302c19, #14160c);
+}
+.resource-upload-dialog .upload-workflow-finish p {
+  margin-bottom: 0;
+}
+.source-settings-dialog.resource-upload-dialog .upload-resource-actions button {
+  min-height: 36px;
+  padding: 7px 12px;
+  border: 2px solid;
+  border-color: #b0aa84 #514735 #32291e #8a825f;
+  border-radius: 0;
+  color: #ffe27f;
+  background: radial-gradient(ellipse at 50% 20%, #8f2515, #4b0e07 70%, #260603);
+  box-shadow:
+    inset 0 0 0 2px #260804,
+    inset 0 3px #e0733b30,
+    0 2px 2px #0007;
+  text-shadow: 1px 1px #200400;
+  font:
+    bold 12px Tahoma,
+    Arial,
+    sans-serif;
+}
+.source-settings-dialog.resource-upload-dialog .upload-resource-actions button:hover:not(:disabled) {
+  border-color: #d0b16e #695031 #4c361c #b59352;
+  color: #fff0a2;
+  background: radial-gradient(ellipse at 50% 20%, #c26a20, #7a2e0c 70%, #411205);
+}
+.source-settings-dialog.resource-upload-dialog .upload-resource-actions button:active:not(:disabled) {
+  background: #4b1008;
+  box-shadow: inset 0 3px 5px #000a;
+}
+.source-settings-dialog.resource-upload-dialog .upload-resource-actions button:disabled {
+  border-color: #555a4b #303627 #252b1f #4b5141;
+  color: #747b64;
+  background: #252c20;
+  box-shadow: inset 0 0 0 1px #10160c;
+  text-shadow: none;
+  cursor: default;
+}
+.source-settings-dialog.resource-upload-dialog .resource-download-link:any-link {
+  min-height: 0;
+  padding: 3px 0;
+  border: 0;
+  border-radius: 0;
+  color: #caae6b;
+  background: transparent;
+  box-shadow: none;
+  text-shadow: none;
+  font-size: 11px;
+  font-weight: 400;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.source-settings-dialog.resource-upload-dialog .resource-download-link:any-link:hover {
+  color: #ffe69b;
+  background: transparent;
+  box-shadow: none;
+}
+.resource-upload-dialog .resource-upload-footer {
+  padding: 10px 20px;
+  border-top: 3px solid #10160f;
+  background: linear-gradient(110deg, #727b6b, #3c4838 30%, #273322 65%, #59664f);
+  box-shadow: inset 0 1px #b4b89b60;
+}
+.resource-upload-dialog .upload-launch-summary strong {
+  color: #f0dda3;
+  font-size: 12px;
+  text-shadow: 1px 1px #17200f;
+}
+.resource-upload-dialog .upload-launch-summary small {
+  color: #bcc3a6;
+  font-size: 10px;
+}
+.resource-upload-dialog .upload-launch-actions {
+  margin-top: 0;
+}
+.source-settings-dialog.resource-upload-dialog .upload-launch-button {
+  min-width: 150px;
+  min-height: 42px;
+  font-size: 14px;
+}
+@media (max-width: 640px), (max-height: 560px) {
+  .resource-upload-dialog .source-settings-header {
+    padding: 7px 12px;
+  }
+  .resource-upload-dialog .source-settings-header h2 {
+    padding: 4px 16px;
+    min-width: 140px;
+    font-size: 16px;
+  }
+  .resource-upload-dialog .ra2-content {
+    padding: 12px;
+    gap: 12px;
+  }
+  .resource-upload-dialog .upload-workflow {
+    padding-left: 38px;
+  }
+  .resource-upload-dialog .upload-workflow::before {
+    left: 12px;
+  }
+  .resource-upload-dialog .upload-workflow-node {
+    padding: 10px;
+  }
+  .resource-upload-dialog .upload-workflow-node::before {
+    left: -38px;
+    width: 24px;
+    height: 26px;
+  }
+  .resource-upload-dialog .upload-workflow-node::after {
+    left: -31px;
+  }
+  .resource-upload-dialog .resource-upload-footer {
+    padding: 8px 12px;
+  }
+  .resource-upload-dialog .upload-package,
+  .resource-upload-dialog .upload-workflow-finish {
+    flex-wrap: wrap;
+  }
+  .resource-upload-dialog .upload-edition-option strong {
+    font-size: 12px;
+  }
+}

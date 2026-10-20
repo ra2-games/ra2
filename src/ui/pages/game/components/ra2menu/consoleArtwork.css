@@ -1,0 +1,55 @@
+/* SVG paints the equipment; CSS places it and animates decorative radar layers. */
+.ra2-console-art {
+  --radar-period: 6s;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+  user-select: none;
+}
+.console-title {
+  text-transform: uppercase;
+}
+@media (max-width: 560px) {
+  .ra2-console-art {
+    display: none;
+  }
+}
+
+.radar-sweep {
+  transform-box: view-box;
+  transform-origin: 308px 253px;
+  animation: radar-scan var(--radar-period) linear infinite;
+}
+.radar-contact {
+  animation: radar-return var(--radar-period) linear infinite;
+}
+@keyframes radar-scan {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes radar-return {
+  0%,
+  6%,
+  100% {
+    opacity: 1;
+  }
+  30% {
+    opacity: 0.65;
+  }
+  60% {
+    opacity: 0.25;
+  }
+  99% {
+    opacity: 0.12;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .radar-sweep,
+  .radar-contact {
+    animation: none;
+  }
+}

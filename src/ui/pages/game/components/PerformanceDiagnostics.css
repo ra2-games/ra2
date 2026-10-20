@@ -1,0 +1,26 @@
+.performance-diagnostics {
+  width: min(42rem, calc(100vw - 2rem));
+  max-height: calc(100dvh - 2rem);
+  overflow: auto;
+  box-sizing: border-box;
+}
+
+.performance-diagnostics header,
+.performance-diagnostics-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.performance-diagnostics textarea {
+  box-sizing: border-box;
+  width: 100%;
+  height: min(40dvh, 22rem);
+  margin-top: 1rem;
+  font: 12px monospace;
+  resize: vertical;
+  user-select: text;
+  -webkit-user-select: text;
+}

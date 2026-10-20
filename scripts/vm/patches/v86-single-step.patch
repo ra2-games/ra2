@@ -1,0 +1,89 @@
+diff --git a/src/rust/cpu/cpu.rs b/src/rust/cpu/cpu.rs
+index 19f79b08..0145b7a9 100644
+--- a/src/rust/cpu/cpu.rs
++++ b/src/rust/cpu/cpu.rs
+@@ -797,6 +797,7 @@ pub unsafe fn call_interrupt_vector(
+     is_software_int: bool,
+     error_code: Option<i32>,
+ ) {
++    if stepping_instruction { step_interrupted = true; }
+     if *protected_mode {
+         if vm86_mode() && *cr.offset(4) & CR4_VME != 0 {
+             panic!("Unimplemented: VME");
+@@ -3022,7 +3023,26 @@ pub unsafe fn run_instruction(opcode: i32) { gen::interpreter::run(opcode as u32
+ pub unsafe fn run_instruction0f_16(opcode: i32) { gen::interpreter0f::run(opcode as u32) }
+ pub unsafe fn run_instruction0f_32(opcode: i32) { gen::interpreter0f::run(opcode as u32 | 0x100) }
+ 
++static mut stepping_instruction: bool = false;
++static mut step_interrupted: bool = false;
++
+ pub unsafe fn cycle_internal() {
++    // TF executes exactly one real instruction through the existing decoder.
++    // Faults/software interrupts take precedence over the post-instruction debug trap.
++    if *flags & FLAG_TRAP != 0 {
++        *previous_ip = *instruction_pointer;
++        stepping_instruction = true;
++        step_interrupted = false;
++        if let Ok(opcode) = read_imm8() {
++            run_instruction(opcode | (is_osize_32() as i32) << 8);
++        }
++        stepping_instruction = false;
++        *instruction_counter += 1;
++        if !step_interrupted {
++            call_interrupt_vector(CPU_EXCEPTION_DB, false, None);
++        }
++        return;
++    }
+     profiler::stat_increment(stat::CYCLE_INTERNAL);
+     let mut jit_entry = None;
+     let initial_eip = *instruction_pointer;
+@@ -3211,7 +3231,7 @@ unsafe fn jit_run_interpreted(mut phys_addr: u32) {
+         run_instruction(opcode | (*is_32 as i32) << 8);
+         dbg_assert!(*prefixes == 0);
+ 
+-        if jit_block_boundary
++        if jit_block_boundary || *flags & FLAG_TRAP != 0
+             || Page::page_of(start_eip as u32) != Page::page_of(*instruction_pointer as u32)
+                 // Limit the number of iterations, as jumps within the same page are not counted as
+                 // block boundaries for the interpreter, but only on the next backwards jump
+@@ -4394,10 +4414,6 @@ pub unsafe fn update_eflags(new_flags: i32) {
+     *flags = (new_flags ^ (*flags ^ new_flags) & dont_update) & clear | FLAGS_DEFAULT;
+     *flags_changed = 0;
+ 
+-    if *flags & FLAG_TRAP != 0 {
+-        dbg_log!("Not supported: trap flag");
+-    }
+-    *flags &= !FLAG_TRAP;
+ }
+ 
+ #[no_mangle]
+@@ -4646,3 +4662,7 @@ pub unsafe fn reset_cpu() {
+ 
+ #[no_mangle]
+ pub unsafe fn set_cpuid_level(level: u32) { cpuid_level = level }
++
++/// Capability marker for the runtime build cache, not a game-version identifier.
++#[no_mangle]
++pub extern "C" fn ra2vm_cpu_single_step() -> i32 { 1 }
+diff --git a/src/rust/jit_instructions.rs b/src/rust/jit_instructions.rs
+index 142c5220..6d96e226 100644
+--- a/src/rust/jit_instructions.rs
++++ b/src/rust/jit_instructions.rs
+@@ -1,5 +1,6 @@
+ #![allow(non_snake_case)]
+ 
++use crate::cpu::cpu::FLAG_TRAP;
+ use crate::codegen;
+ use crate::codegen::{BitSize, ConditionNegate};
+ use crate::cpu::cpu::{
+@@ -4558,6 +4559,10 @@ fn gen_popf(ctx: &mut JitContext, is_32: bool) {
+     ctx.builder.eqz_i32();
+ 
+     ctx.builder.and_i32();
++    codegen::gen_get_flags(ctx.builder);
++    ctx.builder.const_i32(FLAG_TRAP);
++    ctx.builder.and_i32();
++    ctx.builder.or_i32();
+     ctx.builder.if_void();
+     {
+         codegen::gen_set_eip_to_after_current_instruction(ctx);

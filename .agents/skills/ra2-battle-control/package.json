@@ -1,0 +1,29 @@
+{
+  "name": "@ra2vm/control",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Distributable RA2/YR control skill, CLI and loopback server",
+  "packageManager": "pnpm@11.24.0",
+  "engines": {
+    "pnpm": "11.24.0"
+  },
+  "exports": {
+    "./*": "./scripts/*.ts"
+  },
+  "scripts": {
+    "ra2ctl": "tsx scripts/ra2ctl.mts",
+    "ra2agent": "tsx scripts/agent.mts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "tsx": "4.23.12",
+    "ws": "8.21.3"
+  },
+  "devDependencies": {
+    "@types/node": "26.2.0",
+    "@types/ws": "8.18.1",
+    "typescript": "5.9.3"
+  },
+  "license": "GPL-3.0-or-later"
+}

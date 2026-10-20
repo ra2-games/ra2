@@ -1,0 +1,72 @@
+.edge-mouse-notice {
+  box-sizing: border-box;
+  width: min(520px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: 24px;
+  color: var(--ink);
+  background: var(--panel-bg);
+  border: 1px solid var(--gold-soft);
+  border-radius: 12px;
+  box-shadow:
+    0 16px 60px rgba(0, 0, 0, 0.78),
+    var(--inset-hi);
+  font:
+    14px / 1.7 "Microsoft JhengHei",
+    "PingFang TC",
+    sans-serif;
+}
+.edge-mouse-notice::backdrop {
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(3px);
+}
+.edge-mouse-notice h2 {
+  margin: 0 0 12px;
+  color: var(--gold-bright);
+  font-size: 18px;
+}
+.edge-mouse-notice p {
+  margin: 0 0 14px;
+}
+.edge-mouse-notice label {
+  font-size: 12px;
+}
+.edge-mouse-settings {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+}
+#edge-mouse-settings {
+  box-sizing: border-box;
+  flex: 1 1 230px;
+  min-width: 0;
+  width: 100%;
+  padding: 8px;
+  border: 1px solid var(--gold-dim);
+  border-radius: 5px;
+  color: var(--ink);
+  background: rgba(0, 0, 0, 0.25);
+  font: 12px / 1.5 monospace;
+}
+.edge-mouse-notice output {
+  display: block;
+  min-height: 1.7em;
+  margin-top: 6px;
+  font-size: 12px;
+}
+.edge-mouse-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 18px;
+}
+.edge-mouse-notice button {
+  min-height: 36px;
+}
+.edge-mouse-notice [data-remember] {
+  border-color: var(--gold-soft);
+  color: var(--gold-bright);
+}

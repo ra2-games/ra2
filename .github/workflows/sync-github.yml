@@ -1,0 +1,66 @@
+name: Sync main to GitHub
+
+on:
+  workflow_dispatch:
+    inputs:
+      force:
+        description: 'Force overwrite destination main history'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sync-github-main
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout source main
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          ref: refs/heads/main
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Push main to GitHub
+        shell: bash
+        env:
+          TARGET_REPOSITORY: ra2-games/ra2
+          # Some compatible runners expose dispatch inputs only in the event context.
+          FORCE_PUSH: ${{ github.event.inputs.force || inputs.force }}
+          X_GITHUB_TOKEN: ${{ secrets.X_GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$X_GITHUB_TOKEN" ]]; then
+            echo 'X_GITHUB_TOKEN is required.' >&2
+            exit 1
+          fi
+          case "$FORCE_PUSH" in
+            true) push_options=(--force) ;;
+            false) push_options=() ;;
+            *) echo 'Missing or invalid force input; expected true or false.' >&2; exit 1 ;;
+          esac
+          printf 'Sync main to %s: force=%s\n' "$TARGET_REPOSITORY" "$FORCE_PUSH"
+
+          # Keep the token out of remote URLs, command arguments, and Git configuration.
+          export GIT_ASKPASS
+          GIT_ASKPASS="$(mktemp)"
+          trap 'rm -f "$GIT_ASKPASS"' EXIT
+          cat > "$GIT_ASKPASS" <<'ASKPASS'
+          #!/usr/bin/env bash
+          case "$1" in
+            *Username*) printf '%s\n' 'x-access-token' ;;
+            *Password*) printf '%s\n' "$X_GITHUB_TOKEN" ;;
+            *) exit 1 ;;
+          esac
+          ASKPASS
+          chmod 700 "$GIT_ASKPASS"
+          export GIT_TERMINAL_PROMPT=0
+          git -c credential.helper= push "${push_options[@]}" \
+            "https://github.com/${TARGET_REPOSITORY}.git" HEAD:refs/heads/main

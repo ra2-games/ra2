@@ -1,0 +1,11 @@
+# This package is the build context; send only files required for the build.
+**
+!package.json
+!pnpm-lock.yaml
+!pnpm-workspace.yaml
+!RELAY_PROTOCOL.md
+!LICENSE
+!src/
+!src/**
+!scripts/
+!scripts/**

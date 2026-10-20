@@ -1,0 +1,178 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [dev, main]
+  push:
+    branches: [dev, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# At most one pipeline runs repository-wide at a time; a newly triggered
+# run cancels the in-flight one, including PR checks vs real-game runs.
+concurrency:
+  group: ci
+  cancel-in-progress: true
+
+jobs:
+  basic:
+    name: Basic test
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '*'
+
+      # pnpm 11 itself requires Node >=22.13; do not start it using the runner's unknown default Node.
+      - name: Set up pinned pnpm
+        uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa # v4
+
+      - name: Show toolchain versions
+        run: |
+          node --version
+          pnpm --version
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update && sudo apt-get install -y nasm clang lld make git python3
+
+      - name: Install Rust toolchain
+        id: rust
+        uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master
+        with:
+          toolchain: stable
+          targets: wasm32-unknown-unknown
+
+      - name: Configure pnpm store
+        run: pnpm config set store-dir "$RUNNER_TEMP/pnpm-store"
+
+      - name: Cache pnpm downloads
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: ${{ runner.temp }}/pnpm-store
+          key: ${{ runner.os }}-${{ runner.arch }}-${{ github.event_name }}-basic-pnpm-v1-${{ hashFiles('pnpm-lock.yaml', 'package.json') }}
+
+      - name: Install dependencies
+        run: timeout --kill-after=15s 5m pnpm install --frozen-lockfile
+
+      - name: Cache compiled v86 CPU
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: |
+            node_modules/.cache/ra2vm-v86/build.json
+            node_modules/.cache/ra2vm-v86/cpu.wasm
+          key: ${{ runner.os }}-${{ runner.arch }}-${{ github.event_name }}-basic-cpu-v1-${{ steps.rust.outputs.cachekey }}-${{ hashFiles('pnpm-lock.yaml', 'package.json', 'scripts/vm/buildV86.mts', 'scripts/vm/patches/**') }}
+
+      - name: Check formatting
+        run: pnpm run format:check
+
+      - name: Unit, firmware and browser checks
+        run: pnpm run ci:basic
+
+  ra2:
+    name: Real game RA2
+    needs: basic
+    if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/main')
+    runs-on: ubuntu-latest
+    timeout-minutes: 65
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '*'
+      - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa # v4
+      - name: Prepare CPU build toolchain
+        run: |
+          sudo apt-get update && sudo apt-get install -y clang lld make git python3
+      - name: Install Rust toolchain
+        id: rust
+        uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master
+        with:
+          toolchain: stable
+          targets: wasm32-unknown-unknown
+
+      - name: Configure pnpm store
+        run: pnpm config set store-dir "$RUNNER_TEMP/pnpm-store"
+
+      - name: Cache pnpm downloads
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: ${{ runner.temp }}/pnpm-store
+          key: ${{ runner.os }}-${{ runner.arch }}-real-game-pnpm-v1-${{ hashFiles('pnpm-lock.yaml', 'package.json') }}
+
+      - run: timeout --kill-after=15s 5m pnpm install --frozen-lockfile
+
+      - name: Cache compiled v86 CPU
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: |
+            node_modules/.cache/ra2vm-v86/build.json
+            node_modules/.cache/ra2vm-v86/cpu.wasm
+          key: ${{ runner.os }}-${{ runner.arch }}-real-game-cpu-v1-${{ steps.rust.outputs.cachekey }}-${{ hashFiles('pnpm-lock.yaml', 'package.json', 'scripts/vm/buildV86.mts', 'scripts/vm/patches/**') }}
+
+      - name: Download, verify and test ra2
+        env:
+          GAME_RA2_URL: ${{ secrets.GAME_RA2_URL }}
+          GAME_RA2_SHA256: ${{ secrets.GAME_RA2_SHA256 }}
+        run: pnpm run ci:real-game ra2
+
+  yr:
+    name: Real game YR
+    needs: [basic, ra2]
+    # Still test YR after RA2 fails; stop if the workflow is canceled or Basic fails.
+    if: always() && !cancelled() && needs.basic.result == 'success' && github.event_name != 'pull_request' && (github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/main')
+    runs-on: ubuntu-latest
+    timeout-minutes: 65
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '*'
+      - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa # v4
+      - name: Prepare CPU build toolchain
+        run: |
+          sudo apt-get update && sudo apt-get install -y clang lld make git python3
+      - name: Install Rust toolchain
+        id: rust
+        uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master
+        with:
+          toolchain: stable
+          targets: wasm32-unknown-unknown
+
+      - name: Configure pnpm store
+        run: pnpm config set store-dir "$RUNNER_TEMP/pnpm-store"
+
+      - name: Cache pnpm downloads
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: ${{ runner.temp }}/pnpm-store
+          key: ${{ runner.os }}-${{ runner.arch }}-real-game-pnpm-v1-${{ hashFiles('pnpm-lock.yaml', 'package.json') }}
+
+      - run: timeout --kill-after=15s 5m pnpm install --frozen-lockfile
+
+      - name: Cache compiled v86 CPU
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: |
+            node_modules/.cache/ra2vm-v86/build.json
+            node_modules/.cache/ra2vm-v86/cpu.wasm
+          key: ${{ runner.os }}-${{ runner.arch }}-real-game-cpu-v1-${{ steps.rust.outputs.cachekey }}-${{ hashFiles('pnpm-lock.yaml', 'package.json', 'scripts/vm/buildV86.mts', 'scripts/vm/patches/**') }}
+
+      - name: Download, verify and test yr
+        env:
+          GAME_RA2_YR_URL: ${{ secrets.GAME_RA2_YR_URL }}
+          GAME_RA2_YR_SHA256: ${{ secrets.GAME_RA2_YR_SHA256 }}
+        run: pnpm run ci:real-game yr

@@ -1,0 +1,12 @@
+services:
+  relay:
+    image: relay-package:local
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    init: true
+    command: ['node', 'gameRelay.cjs', '--host', '0.0.0.0', '--port', '15176']
+    ports:
+      - '15176:15176/tcp'
+    stop_grace_period: 20s

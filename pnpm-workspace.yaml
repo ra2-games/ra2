@@ -1,0 +1,15 @@
+packages:
+  - '.'
+  - 'packages/*'
+  - '.agents/skills/ra2-battle-control'
+
+# Run only reviewed installation scripts; new dependencies must not silently execute builds.
+strictDepBuilds: true
+engineStrict: false
+allowBuilds:
+  # core-js only prints a sponsorship banner in postinstall; the runtime files work without it.
+  core-js: false
+  esbuild: true
+  # Currently use pure JS paths; skip optional native extensions and protobuf installation scripts.
+  fsevents: false
+  protobufjs: false

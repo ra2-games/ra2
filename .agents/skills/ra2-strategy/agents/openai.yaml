@@ -1,0 +1,4 @@
+interface:
+  display_name: "RA2 Strategy"
+  short_description: "Plan economy, scouting and combat objectives"
+  default_prompt: "Use $ra2-strategy to play the connected RA2 match."

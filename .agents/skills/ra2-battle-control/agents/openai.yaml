@@ -1,0 +1,4 @@
+interface:
+  display_name: "RA2 Battle Control"
+  short_description: "Execute native orders and monitor the battlefield"
+  default_prompt: "Use $ra2-battle-control to play the connected RA2 match."

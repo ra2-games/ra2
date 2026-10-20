@@ -1,0 +1,6 @@
+# Allow only the reviewed TypeScript runner build dependency.
+strictDepBuilds: true
+allowBuilds:
+  esbuild: true
+  # Native file watching is optional; CLI execution does not require it.
+  fsevents: false

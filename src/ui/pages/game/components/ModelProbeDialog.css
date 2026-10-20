@@ -1,0 +1,78 @@
+.model-probe-dialog {
+  width: min(1000px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
+  box-sizing: border-box;
+  padding: 16px;
+  background: #1b1c1e;
+  color: #dedbd0;
+  font: inherit;
+  border: 2px solid;
+  border-color: #777 #111 #090909 #777;
+  box-shadow: 4px 4px #080808;
+}
+.model-probe-dialog::backdrop {
+  background: #0009;
+}
+.model-probe-dialog h3,
+.model-probe-dialog figcaption {
+  color: #ffff00;
+}
+.model-probe-dialog input {
+  max-width: 100%;
+  color: inherit;
+  background: #111;
+  border: 1px solid #666;
+  padding: 4px;
+}
+.model-probe-dialog input::file-selector-button {
+  color: #ffff00;
+  background: #343a3d;
+  border: 1px solid;
+  border-color: #899398 #111 #111 #899398;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+.model-probe-dialog header,
+.model-probe-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.model-probe-dialog p {
+  text-align: left;
+  line-height: 1.5;
+}
+.model-probe-dialog a {
+  color: #ffff00;
+}
+.model-probe-actions {
+  margin-top: 12px;
+}
+.model-probe-actions input {
+  width: 64px;
+}
+.model-probe-comparison {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.model-probe-comparison figure {
+  margin: 0;
+}
+.model-probe-comparison canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  image-rendering: pixelated;
+}
+.model-probe-comparison figcaption {
+  margin-bottom: 6px;
+}
+@media (max-width: 600px) {
+  .model-probe-comparison {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,19 @@
+node_modules/
+.pnpm-store/
+dist/
+.vite/
+*.log
+.DS_Store
+/game/
+.claude/
+.worktrees/
+.vercel/
+.env*
+.tmp*
+.idea
+# Do not commit local super-resolution weights or Python caches with source code.
+*.onnx
+*.onnx.data
+*.pth
+*.safetensors
+__pycache__/

@@ -1,0 +1,511 @@
+/* Layout and live controls for the inline SVG console.
+   The local font stack keeps the interface independent of hosted fonts. */
+.ra2-screen > .ea-notice,
+.landscape-notice > .ea-notice {
+  flex: 0 0 auto;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  margin: 0;
+  padding: 8px 12px;
+  max-width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #697580;
+  border-radius: 4px;
+  background: #101820;
+  color: #f2f5f7;
+  font:
+    13px / 1.4 Arial,
+    sans-serif;
+  text-align: center;
+}
+.ra2-screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* Auto margins center the panel when it fits and keep the top scrollable when the viewport is too short. */
+  justify-content: flex-start;
+  gap: 10px;
+  padding: 16px;
+  box-sizing: border-box;
+  overflow-y: auto;
+  background: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.015) 0 1px, transparent 1px 3px), #0d0d0d;
+  color: #ff0;
+  font-family: "Arial Narrow", "Liberation Sans Narrow", Arial, "Microsoft JhengHei", sans-serif;
+  pointer-events: auto;
+  user-select: none;
+  -webkit-user-select: none;
+}
+/* Viewport-anchored fade grounds the equipment panel against the dark page. */
+.ra2-screen::after {
+  content: "";
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 120px;
+  background: linear-gradient(180deg, transparent, #000);
+  pointer-events: none;
+  z-index: 0;
+}
+.ra2-panel-wrap {
+  flex: 0 0 auto;
+  z-index: 1;
+  margin-top: auto;
+  zoom: var(--ra2-panel-zoom, 1);
+}
+.ra2-panel {
+  position: relative;
+  width: 800px;
+  height: 600px;
+  box-sizing: border-box;
+  background: #080b0b;
+}
+/* Status terminal aligned with the top-right inset of the menu artwork. */
+.ra2-menu-header {
+  position: absolute;
+  width: 165px;
+  height: 155px;
+  right: 8px;
+  top: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding-top: 12px;
+  box-sizing: border-box;
+  text-align: center;
+}
+.status-terminal-label {
+  color: #a69b75;
+  font: 9px / 1 monospace;
+  letter-spacing: 0.14em;
+}
+.status-terminal-readout {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #d8c784;
+  font:
+    700 13px / 1 "Arial Narrow",
+    "Liberation Sans Narrow",
+    Arial,
+    sans-serif;
+  letter-spacing: 0.08em;
+  text-shadow: 0 0 5px #b99e3b66;
+}
+.status-terminal-readout i {
+  width: 6px;
+  height: 6px;
+  background: currentColor;
+  box-shadow: 0 0 6px currentColor;
+}
+.status-terminal-readout.scanning {
+  color: #f0a34d;
+}
+.status-terminal-readout.error {
+  color: #e46e62;
+}
+.status-terminal-divider {
+  width: 116px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #8f805f, transparent);
+}
+.status-terminal-detail {
+  max-width: 122px;
+  color: #877f68;
+  font: 8px / 1.35 monospace;
+  letter-spacing: 0.06em;
+  overflow-wrap: anywhere;
+}
+/* Align the 42px controls with the nine steel mounting rows. */
+.ra2-menu-nav {
+  position: absolute;
+  top: 199px;
+  right: 13.5px;
+  bottom: 23px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+.ra2-menu-blank {
+  width: 155px;
+  height: 42px;
+  /* Shrink the separator instead of clipping buttons when the column is full. */
+  flex: 0 1 auto;
+}
+.ra2-menu-nav .ra2-spacer {
+  flex: 1 1 auto;
+}
+/* Dark recessed switches sit inside the silver housing rather than adding a second silver frame. */
+.ra2-menu-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 155px;
+  height: 42px;
+  flex: 0 0 auto;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #ffe448;
+  font:
+    700 13px / 1 Tahoma,
+    Arial,
+    "Microsoft JhengHei",
+    sans-serif;
+  text-shadow:
+    0 1px 1px #220400,
+    0 0 2px #8d250733;
+  text-decoration: none;
+  cursor: pointer;
+}
+/* Separate trim and face layers preserve the full 155x42 hit target. */
+.ra2-menu-btn::before,
+.ra2-menu-btn::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+}
+.ra2-menu-btn::before {
+  z-index: 0;
+  inset: 5px 4px;
+  border: 0;
+  background: linear-gradient(180deg, #222728, #0d1112 25%, #090c0d 80%, #191e1f);
+  box-shadow:
+    inset 0 1px 2px #000b,
+    inset 1px 0 #080b0c,
+    0 1px #a6ada64d;
+}
+.ra2-menu-btn::after {
+  z-index: 1;
+  inset: 8px 7px;
+  border: 1px solid #3f0906;
+  background:
+    repeating-linear-gradient(0deg, #0000000c 0 1px, transparent 1px 3px),
+    radial-gradient(ellipse at 50% 48%, #f51a0c 0, #d71007 26%, #a40804 52%, #640403 76%, #260303 100%);
+  box-shadow:
+    inset 0 1px #6d0e08,
+    inset 0 -1px #150604,
+    inset 2px 0 3px #16030280,
+    inset -2px 0 3px #16030280;
+  transition: filter 100ms linear;
+}
+/* The label owns the flex layout so Ra2MenuButton can measure and shrink overflowing text. */
+.ra2-menu-btn-label {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  transform: translateY(-0.5px);
+  /* Last resort after the fit-text floor: ellipsis instead of a clipped glyph. */
+  text-overflow: ellipsis;
+}
+.ra2-menu-btn-label img {
+  flex: 0 0 auto;
+}
+.ra2-menu-btn-label:has(.game-icon) {
+  width: 100%;
+  box-sizing: border-box;
+  padding-inline: 22px;
+}
+.ra2-menu-btn-label .game-icon {
+  position: absolute;
+  left: 0;
+}
+/* Keep the housing and black recess stable while the red face responds to input. */
+.ra2-menu-btn:hover:not(:disabled)::after {
+  background:
+    repeating-linear-gradient(0deg, #00000008 0 1px, transparent 1px 3px),
+    radial-gradient(ellipse at 50% 48%, #ffe064 0, #ffae20 28%, #f16b08 56%, #ad3004 82%, #5e1203 100%);
+  border-color: #943508;
+  filter: none;
+  box-shadow:
+    inset 0 1px #ffb33b99,
+    inset 0 -1px #542004,
+    inset 2px 0 3px #63200266,
+    inset -2px 0 3px #63200266;
+}
+.ra2-menu-btn:active:not(:disabled) {
+  color: #c5ad6a;
+}
+.ra2-menu-btn:active:not(:disabled)::after {
+  background:
+    repeating-linear-gradient(0deg, #0000000c 0 1px, transparent 1px 3px),
+    radial-gradient(ellipse at 50% 48%, #f51a0c 0, #d71007 26%, #a40804 52%, #640403 76%, #260303 100%);
+  border-color: #3f0906;
+  filter: brightness(0.75);
+  transition: none;
+  box-shadow:
+    inset 1px 2px 4px #000c,
+    inset 0 -1px #a06e383d;
+}
+.ra2-menu-btn:active:not(:disabled) .ra2-menu-btn-label {
+  transform: translateY(1.5px);
+}
+.ra2-menu-btn:focus-visible {
+  outline: 2px solid #dbc36a;
+  outline-offset: 2px;
+}
+.ra2-menu-btn:disabled {
+  color: #99927e;
+  filter: saturate(0.35);
+  opacity: 0.6;
+  cursor: default;
+}
+/* The briefing grows upward from the lower housing lip without an internal scroller. */
+.ra2-content {
+  position: absolute;
+  left: 36px;
+  top: auto;
+  min-height: 180px;
+  right: 230px;
+  bottom: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  overflow: visible;
+  padding: 12px 14px;
+  box-sizing: border-box;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.6) 100%);
+  font-size: 13px;
+}
+.ra2-content > * {
+  flex-shrink: 0;
+}
+.ra2-footer {
+  flex: 0 0 auto;
+  z-index: 1;
+  max-width: 100%;
+  padding: 0 1rem;
+  text-align: center;
+  color: #cbcbcb;
+  font-size: 1rem;
+  margin-bottom: auto;
+}
+/* Startup overlay: the same menu screen shows the game title, progress, and a cancel command. */
+#vm-boot {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+}
+/* A dark steel lip seats the briefing display inside the console housing. */
+.ra2-content {
+  border: 3px solid transparent;
+  border-radius: 2px;
+  box-shadow:
+    0 0 0 1px #07090a,
+    0 2px 3px #000b,
+    inset 0 1px 4px #0009;
+  background:
+    linear-gradient(125deg, #171a1b, #090c0e 57%, #111416) padding-box,
+    linear-gradient(135deg, #858b8b, #393f44 17%, #12171c 48%, #616969 86%, #252c31) border-box;
+  padding: 12px 16px;
+  font-family: Tahoma, Arial, "Microsoft YaHei", sans-serif;
+}
+.ra2-progress-frame {
+  position: absolute;
+  left: 1px;
+  /* The SVG housing ends before the separate control column. */
+  right: 187px;
+  bottom: 1px;
+  height: 31px;
+  box-sizing: border-box;
+  padding: 5px 6px;
+  border: 1px solid #93968e;
+  border-radius: 4px;
+  background: linear-gradient(
+    #fcfdf6,
+    #a5aba1 6%,
+    #464d49 16%,
+    #0c100e 24%,
+    #030605 70%,
+    #2e3330 86%,
+    #c1c4bc 94%,
+    #41483f
+  );
+  box-shadow:
+    inset 1px 0 #ffffff9c,
+    inset -1px 0 #141914;
+}
+.ra2-progress-track {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+  background: #000;
+  box-shadow: 0 0 0 1px #000;
+}
+.ra2-progress-fill {
+  display: block;
+  width: var(--ra2-progress);
+  height: 100%;
+  background: linear-gradient(#f80000, #b90000);
+  box-shadow: inset 0 1px #ff3939;
+}
+.ra2-progress-label {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding-inline: 5px;
+  color: #ffff00;
+  text-align: center;
+  font:
+    bold 11px / 16px Tahoma,
+    Arial,
+    sans-serif;
+  text-shadow:
+    1px 1px #320000,
+    -1px -1px #320000;
+}
+.ra2-progress-track.indeterminate .ra2-progress-fill {
+  width: 35%;
+  animation: ra2-progress-sweep 1.6s ease-in-out infinite alternate;
+}
+@keyframes ra2-progress-sweep {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(286%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ra2-progress-track.indeterminate .ra2-progress-fill {
+    animation: none;
+    width: 100%;
+    opacity: 0.35;
+  }
+}
+@media (max-width: 560px) {
+  .ra2-progress-frame {
+    position: relative;
+    inset: auto;
+    width: 100%;
+    margin-top: 14px;
+    height: 32px;
+  }
+  .ra2-progress-label {
+    line-height: 20px;
+  }
+}
+/* Narrow screens retain the desktop plates and palette in a scrollable two-column menu. */
+@media (max-width: 560px) {
+  .ra2-screen {
+    justify-content: flex-start;
+    gap: 0;
+    padding: env(safe-area-inset-top, 0px) max(16px, env(safe-area-inset-right, 0px))
+      max(24px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+    scroll-padding-block: 16px;
+    scrollbar-gutter: stable both-edges;
+    overflow-anchor: none;
+  }
+  .ra2-panel-wrap {
+    zoom: 1;
+    width: 100%;
+    margin-top: 0;
+  }
+  .ra2-footer {
+    margin-bottom: 0;
+  }
+  .ra2-panel {
+    width: 100%;
+    height: auto;
+    padding: 12px;
+    background: linear-gradient(#181b19, #090b0a);
+  }
+  .ra2-menu-header {
+    position: static;
+    width: 100%;
+    height: auto;
+    min-height: 64px;
+    padding: 8px;
+    gap: 6px;
+    border-bottom: 1px solid #8c784b;
+    box-shadow: 0 1px #090807;
+  }
+  .status-terminal-detail {
+    max-width: 100%;
+    font-size: 10px;
+  }
+  .ra2-menu-nav {
+    position: static;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin: 14px 0 10px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #8c784b;
+    box-shadow: 0 1px #090807;
+  }
+  .ra2-panel {
+    border: 3px ridge #756c58;
+    box-shadow:
+      inset 0 0 0 1px #0a0907,
+      inset 0 0 0 4px rgba(152, 126, 66, 0.3),
+      inset 0 1px #ddd4a566,
+      0 8px 24px #000a;
+  }
+  .ra2-menu-btn {
+    width: 100%;
+    min-width: 0;
+    height: 48px;
+    padding: 0 8px;
+    font-size: 14px;
+  }
+  .ra2-menu-blank,
+  .ra2-menu-nav .ra2-spacer {
+    display: none;
+  }
+  .ra2-content {
+    position: static;
+    right: auto;
+    bottom: auto;
+    padding: 12px 4px;
+    overflow: visible;
+    overflow-wrap: anywhere;
+    /* A uniform tint stays unchanged when relay details extend the briefing. */
+    background: rgba(0, 0, 0, 0.35);
+  }
+  .ra2-content h3 {
+    padding: 8px;
+    border-left: 0;
+    border-bottom: 1px solid #626961;
+    box-shadow: 0 1px #090807;
+  }
+}
+@media (max-width: 560px) {
+  .ra2-loading-content {
+    min-height: 150px;
+  }
+  .status-terminal-readout {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+}
+
+.ra2-loading-action-placeholder {
+  width: 155px;
+  height: 42px;
+  flex: 0 0 auto;
+}
+@media (max-width: 560px) {
+  .ra2-loading-action-placeholder {
+    grid-column: 1 / -1;
+    height: 52px;
+  }
+}

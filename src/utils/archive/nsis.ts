@@ -228,45 +228,91 @@ export interface NsisSplitCollectOptions {
   /** Container offset of the first payload stream's props, returned by decodeAndParseNsis. */
   payloadStart: number;
   files: NsisSplitFile[];
-  /** Whether to decode an entry: required files or nested-archive candidates; decode duplicate offsets once. */
+  /** Whether to collect an entry: required files or nested-archive candidates; one data block is decoded once and shared by every name that references it. */
   isTarget: (path: string) => boolean;
-  /** Decoder for one stream, already bounded by the next stream; the caller owns transfer semantics. */
+  /** Decoder for one LZMA stream, already bounded by its data block or the next stream; the caller owns transfer semantics. */
   decode: (stream: Uint8Array) => Promise<Uint8Array>;
   /** Collect decoded output; propagate contract errors, while this function catches and skips corrupt streams. */
   collect: (path: string, bytes: Uint8Array) => Promise<void>;
   onStatus?: (message: string) => void;
 }
 
+/** One data block of a non-solid NSIS variant: `[u32 prefix][payload]`, with the payload at the recorded stream offset. */
+interface NsisSplitBlock {
+  /** Container offset of the payload's first byte (the LZMA properties for a compressed block). */
+  start: number;
+  /** Container offset one past the payload's last byte. */
+  end: number;
+  /** Bit 31 of the length prefix: the payload is an independent LZMA stream rather than stored file bytes. */
+  compressed: boolean;
+}
+
 /**
- * Decode two-stage variants per file, selecting independent LZMA streams by offset. Skip only an individually corrupt file; unlike solid streams, do not abort the whole package and lose later required assets. Observed example: a corrupt movies01.mix stub stream in the YR jb51 installer previously prevented later required ra2md.mix extraction entirely. Resource validation explicitly reports missing required files. Return skipped-entry descriptions as basename plus reason.
+ * Detect non-solid data-block framing, in which each stream offset is preceded by a u32 length prefix whose high bit marks a compressed payload and whose low 31 bits give the payload size. Detection must be structural, not sample-specific: every block has to end exactly where the next block's prefix begins, so a variant whose offsets point straight at LZMA properties (no prefix) returns null and keeps the next-offset bound. Observed in the YR jb5 installer, where stored payloads such as ConquerMD.dat and the movie stubs were previously decoded as LZMA and dropped as corrupt.
+ */
+function detectSplitBlocks(
+  bytes: Uint8Array,
+  payloadStart: number,
+  files: readonly NsisSplitFile[],
+): Map<number, NsisSplitBlock> | null {
+  const offsets = [...new Set(files.map((file) => file.streamOffset))]
+    .filter((offset) => offset >= 0)
+    .sort((a, b) => a - b);
+  if (!offsets.length) return null;
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const blocks = new Map<number, NsisSplitBlock>();
+  for (let i = 0; i < offsets.length; i++) {
+    const offset = offsets[i]!;
+    const start = payloadStart + offset;
+    if (start < 4 || start > bytes.length) return null;
+    const prefix = view.getUint32(start - 4, true);
+    const end = start + (prefix & 0x7fff_ffff);
+    if (end > bytes.length) return null;
+    const next = offsets[i + 1];
+    if (next !== undefined && end !== payloadStart + next - 4) return null;
+    blocks.set(offset, { start, end, compressed: (prefix & 0x8000_0000) !== 0 });
+  }
+  return blocks;
+}
+
+/**
+ * Decode two-stage variants per file, selecting independent LZMA streams by offset. Stored blocks bypass decoding and yield their payload bytes verbatim. Skip only an individually corrupt file; unlike solid streams, do not abort the whole package and lose later required assets. Observed examples: a corrupt movies01.mix stub stream in the YR jb51 installer previously prevented later required ra2md.mix extraction entirely, and uncompressed ConquerMD.dat in the YR jb5 installer made YR exit with code 1. Distinct names may share one block (identical placeholder movies, duplicated launcher data), so every path of an offset is collected; dropping the later names would hide required files from the manifest. Resource validation explicitly reports missing required files. Return skipped-entry descriptions as basename plus reason.
  */
 export async function decodeNsisSplitFiles(options: NsisSplitCollectOptions): Promise<string[]> {
   const { bytes, payloadStart, files, isTarget, decode, collect, onStatus } = options;
-  const seenOffsets = new Set<number>();
-  const targets = files
-    .filter(
-      (file) => file.streamOffset >= 0 && !seenOffsets.has(file.streamOffset) && seenOffsets.add(file.streamOffset),
-    )
-    .filter((file) => isTarget(file.path))
-    .sort((a, b) => a.streamOffset - b.streamOffset);
+  const blocks = detectSplitBlocks(bytes, payloadStart, files);
+  const groups = new Map<number, string[]>();
+  for (const file of files) {
+    if (file.streamOffset < 0 || !isTarget(file.path)) continue;
+    const paths = groups.get(file.streamOffset);
+    if (!paths) groups.set(file.streamOffset, [file.path]);
+    else if (!paths.includes(file.path)) paths.push(file.path);
+  }
+  const offsets = [...groups.keys()].sort((a, b) => a - b);
   const skipped: string[] = [];
-  for (let i = 0; i < targets.length; i++) {
-    const file = targets[i]!;
-    const next = targets[i + 1];
-    // Bound the view at the next stream's props plus EOS margin; transferInput=false prevents
-    // detaching the whole bytes buffer needed for subsequent files.
-    const end = next ? Math.min(bytes.length, payloadStart + next.streamOffset + 16) : bytes.length;
-    const base = file.path.split(/[\\/]/).pop() ?? file.path;
+  for (let i = 0; i < offsets.length; i++) {
+    const offset = offsets[i]!;
+    const paths = groups.get(offset)!;
+    const block = blocks?.get(offset);
+    const next = offsets[i + 1];
+    // Without prefix framing, bound the view at the next stream's properties plus EOS margin;
+    // transferInput=false prevents detaching the whole bytes buffer needed for subsequent files.
+    const end = next !== undefined ? Math.min(bytes.length, payloadStart + next + 16) : bytes.length;
+    const start = block?.start ?? payloadStart + offset;
+    const base = paths[0]!.split(/[\\/]/).pop() ?? paths[0]!;
     onStatus?.(`正在解码 NSIS：${base}…`);
     let out: Uint8Array;
     try {
-      out = await decode(bytes.subarray(payloadStart + file.streamOffset, end));
+      // Trailing container bytes are owned elsewhere; hand the caller an independent copy of stored payloads.
+      if (block && !block.compressed) out = bytes.slice(block.start, block.end);
+      else out = await decode(bytes.subarray(start, block?.end ?? end));
     } catch (error) {
       skipped.push(`${base}（${error instanceof Error ? error.message : String(error)}）`);
       onStatus?.(`NSIS 流损坏，跳过：${base}`);
       continue;
     }
-    await collect(file.path, out);
+    // Collectors copy the bytes they retain; one decoded block can serve several names.
+    for (const path of paths) await collect(path, out);
   }
   return skipped;
 }

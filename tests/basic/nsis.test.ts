@@ -66,16 +66,16 @@ describe('NSIS 安装包解析', () => {
   });
 });
 
-describe('NSIS 两段流变体（重打包安装器）', () => {
-  /**
-   * Synthetic container matching the YR jb51 installer layout, generated once with Python lzma and embedded:
-   * [MZ stub][signature][u32 header length][4 junk bytes][header-stream properties after junk] + [00 80 separator] + independent LZMA streams per file.
-   * The header block is flags-first (u32 flags + 8 block headers); EW_EXTRACTFILE params[2] holds each stream's offset relative to the first data stream.
-   */
-  const SPLIT_BASE64 =
-    'TVoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADvvq3eTnVsbHNvZnRJbnN0kQAAAAECAwRdAACAAABAgC9uRIQwFz4PbvEA4FcKUtnWsSRLtLM+u+RZyeK0Ur2TwzsFM0i74dj/v//mBYAAAIBdAACAAAAmloktFqDa2/6nDTo2Ig43peOxOf6ZEf/HxIAAAIBdAACAAAAoEsktFqDa2/6nDTo2JVjHpeOxOf6ZEf/HxIAA';
-  const SPLIT_FIXTURE = Uint8Array.from(atob(SPLIT_BASE64), (char) => char.charCodeAt(0));
+/**
+ * Synthetic container matching the YR jb51 installer layout, generated once with Python lzma and embedded:
+ * [MZ stub][signature][u32 header length][4 junk bytes][header-stream properties after junk] + [00 80 separator] + independent LZMA streams per file.
+ * The header block is flags-first (u32 flags + 8 block headers); EW_EXTRACTFILE params[2] holds each stream's offset relative to the first data stream.
+ */
+const SPLIT_BASE64 =
+  'TVoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADvvq3eTnVsbHNvZnRJbnN0kQAAAAECAwRdAACAAABAgC9uRIQwFz4PbvEA4FcKUtnWsSRLtLM+u+RZyeK0Ur2TwzsFM0i74dj/v//mBYAAAIBdAACAAAAmloktFqDa2/6nDTo2Ig43peOxOf6ZEf/HxIAAAIBdAACAAAAoEsktFqDa2/6nDTo2JVjHpeOxOf6ZEf/HxIAA';
+const SPLIT_FIXTURE = Uint8Array.from(atob(SPLIT_BASE64), (char) => char.charCodeAt(0));
 
+describe('NSIS 两段流变体（重打包安装器）', () => {
   it('flags-first 头块 + 每文件独立流：定位载荷起点并逐流解码', async () => {
     const nsis = findNsisArchive(SPLIT_FIXTURE)!;
     expect(nsis.headerSize).toBe(145);
@@ -126,5 +126,83 @@ describe('NSIS 两段流：单条损坏不中断后续文件', () => {
     });
     expect(skipped).toEqual(['file2.bin（corrupted input）']);
     expect(statuses).toContain('NSIS 流损坏，跳过：file2.bin');
+  });
+});
+
+describe('NSIS 非 solid 数据块前缀（压缩位 + 长度）', () => {
+  /**
+   * Real non-solid installers (observed in the YR jb5 installer) prefix every data block with a u32 whose bit 31 marks an LZMA payload and whose low 31 bits give the payload size; the stream offset points after that prefix.
+   * Stored blocks such as ConquerMD.dat hold file bytes directly, so treating them as LZMA dropped them and made YR exit with code 1.
+   */
+  async function framedContainer(prefixDelta: number): Promise<{
+    container: Uint8Array;
+    payloadStart: number;
+    secondOffset: number;
+    storedText: string;
+  }> {
+    const nsis = findNsisArchive(SPLIT_FIXTURE)!;
+    const decoded = await decodeAndParseNsis(SPLIT_FIXTURE, nsis);
+    if (decoded.kind !== 'split') throw new Error('fixture must use split streams');
+    const compressed = SPLIT_FIXTURE.subarray(
+      decoded.payloadStart,
+      decoded.payloadStart + decoded.files[1]!.streamOffset,
+    );
+    const storedText = '[Settings]\r\nConquerMD=1\r\n';
+    const stored = new TextEncoder().encode(storedText);
+    const secondOffset = 4 + compressed.length;
+    const container = new Uint8Array(secondOffset + 4 + stored.length);
+    const view = new DataView(container.buffer);
+    // prefixDelta perturbs the declared sizes so the blocks no longer tile exactly.
+    view.setUint32(0, 0x8000_0000 | (compressed.length + prefixDelta), true);
+    container.set(compressed, 4);
+    view.setUint32(secondOffset, stored.length + prefixDelta, true);
+    container.set(stored, secondOffset + 4);
+    return { container, payloadStart: 4, secondOffset, storedText };
+  }
+
+  it('存储块原样输出，压缩块按 LZMA 解码，共享块保留每个文件名', async () => {
+    const { container, payloadStart, secondOffset, storedText } = await framedContainer(0);
+    const collected = new Map<string, string>();
+    const skipped = await decodeNsisSplitFiles({
+      bytes: container,
+      payloadStart,
+      files: [
+        { path: 'file1.bin', streamOffset: 0 },
+        { path: 'ConquerMD.dat', streamOffset: secondOffset },
+        // Identical placeholder resources reference one payload under several names.
+        { path: 'movies01.mix', streamOffset: secondOffset },
+      ],
+      isTarget: () => true,
+      decode: (stream) => decodeLzmaStream({ stream, transferInput: false }),
+      collect: async (path, out) => {
+        collected.set(path, new TextDecoder().decode(out));
+      },
+    });
+    expect(skipped).toEqual([]);
+    expect(Object.fromEntries(collected)).toEqual({
+      'file1.bin': 'MZfake-file-1-data',
+      'ConquerMD.dat': storedText,
+      'movies01.mix': storedText,
+    });
+  });
+
+  it('前缀尺寸不连续时退回下一流边界，不猜测存储块', async () => {
+    const { container, payloadStart, secondOffset } = await framedContainer(1);
+    const collected = new Map<string, string>();
+    const skipped = await decodeNsisSplitFiles({
+      bytes: container,
+      payloadStart,
+      files: [
+        { path: 'file1.bin', streamOffset: 0 },
+        { path: 'conquermd.dat', streamOffset: secondOffset },
+      ],
+      isTarget: () => true,
+      decode: (stream) => decodeLzmaStream({ stream, transferInput: false }),
+      collect: async (path, out) => {
+        collected.set(path, new TextDecoder().decode(out));
+      },
+    });
+    expect([...collected.keys()]).toEqual(['file1.bin']);
+    expect(skipped).toEqual(['conquermd.dat（corrupted input）']);
   });
 });

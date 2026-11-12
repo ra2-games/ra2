@@ -19,3 +19,15 @@ The earlier multiplayer package could contain a zero-byte `MAPS01.MIX` placehold
 
 The earlier NSIS multiplayer-package converter constrained `language.mix` to one sample
 paired with the Chinese executable selected at that time. This historical combination is not a universal requirement for language resources. Current CI verifies the input package hash and does not silently replace language resources.
+
+## Uncompressed installer payloads
+
+The YR jb5 NSIS repack stores `Conquer.dat`, `ConquerMD.dat`, `updater.bat` and the movie
+stubs uncompressed inside otherwise independently compressed data blocks. Decoding every
+block as LZMA dropped those files as corrupt streams, and `gamemd.exe` then exited with
+code 1 immediately after reading `langmd.mix`, before `ra2md.mix`. Importing the same files
+from an extracted directory with `ConquerMD.dat` removed reproduces that exit, so the absent
+file, not the archive route, decided startup. The shared extractor now reads stored blocks
+verbatim and collects every name attached to one payload. Startup still depends only on the
+files listed in `src/games/manifest.ts`; this observation explains a resource that the
+native executable reads, not an additional host requirement.
